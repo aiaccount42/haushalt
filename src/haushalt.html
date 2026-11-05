@@ -1,0 +1,1310 @@
+<title>Haushalt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Vorkoch: ruhig, hell, große Titel, gruppierte Listen, weiche Karten. Eine Akzentfarbe, Gericht-Farben nur als kleine Punkte. */
+:root {
+  --bg: #F2F2F7; --card: #FFFFFF; --card2: #F7F7FA;
+  --ink: #1C1C1E; --ink2: #636366; --ink3: #A1A1A6;
+  --line: rgba(60, 60, 67, .16); --fill: rgba(120, 120, 128, .12);
+  --accent: #F2B01E; --accentink: #2A1C00; --accentfg: #8F5A00; --tint: rgba(242, 176, 30, .20);
+  --warn: #B25400; --warnbg: rgba(255, 149, 0, .14); --danger: #D70015;
+  --bar: rgba(249, 249, 252, .82); --scrim: rgba(0, 0, 0, .38);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 6px 20px rgba(0, 0, 0, .05);
+  --c1: #22A06B; --c2: #E8643A; --c3: #3B82F6; --c4: #9B6BEA; --c5: #D4476B;
+  --font: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', 'Roboto', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1C1C1E; --card2: #2C2C2E;
+    --ink: #F5F5F7; --ink2: #AEAEB2; --ink3: #636366;
+    --line: rgba(235, 235, 245, .16); --fill: rgba(120, 120, 128, .28);
+    --accent: #F5B93A; --accentink: #241700; --accentfg: #F5B93A; --tint: rgba(245, 185, 58, .18);
+    --warn: #FFB340; --warnbg: rgba(255, 159, 10, .18); --danger: #FF6961;
+    --bar: rgba(28, 28, 30, .78); --scrim: rgba(0, 0, 0, .6);
+    --shadow: none;
+    --c1: #4ADE9B; --c2: #FF8F66; --c3: #6FA3FF; --c4: #B896FF; --c5: #FF7A9C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1C1C1E; --card2: #2C2C2E;
+  --ink: #F5F5F7; --ink2: #AEAEB2; --ink3: #636366;
+  --line: rgba(235, 235, 245, .16); --fill: rgba(120, 120, 128, .28);
+  --accent: #F5B93A; --accentink: #241700; --accentfg: #F5B93A; --tint: rgba(245, 185, 58, .18);
+  --warn: #FFB340; --warnbg: rgba(255, 159, 10, .18); --danger: #FF6961;
+  --bar: rgba(28, 28, 30, .78); --scrim: rgba(0, 0, 0, .6);
+  --shadow: none;
+  --c1: #4ADE9B; --c2: #FF8F66; --c3: #6FA3FF; --c4: #B896FF; --c5: #FF7A9C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.45 var(--font); letter-spacing: -.005em;
+  font-variant-numeric: tabular-nums;
+  padding-block: 8px 120px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body.lock { overflow: hidden; }
+#app { max-width: 640px; margin: 0 auto; min-width: 0; }
+:focus-visible { outline: 3px solid var(--accentfg); outline-offset: 2px; border-radius: 8px; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { -webkit-appearance: none; appearance: none; }
+b { font-weight: 600; }
+h2, h3, h4, p { margin: 0; }
+
+/* Titel */
+.ltitle { font: 800 34px/1.08 var(--font); letter-spacing: -.03em; margin: 18px 2px 2px; text-wrap: balance; }
+.lsub { color: var(--ink2); font-size: 15px; margin: 0 2px 14px; }
+.sec { font: 700 22px/1.2 var(--font); letter-spacing: -.02em; margin: 30px 2px 10px; }
+.cap { font: 600 13px/1.2 var(--font); color: var(--ink2); letter-spacing: .01em; margin: 22px 16px 7px; text-transform: none; }
+.foot { font-size: 13px; color: var(--ink2); margin: 8px 16px 0; line-height: 1.4; }
+.sub { font-size: 14px; color: var(--ink2); }
+.warn { color: var(--warn); font-style: normal; font-weight: 600; }
+.alert { background: var(--warnbg); color: var(--ink); border-radius: 14px; padding: 12px 14px; margin: 8px 0; font-size: 15px; }
+.ok { color: var(--accentfg); font-weight: 600; font-size: 14px; }
+
+/* Gruppierte Liste */
+.grp { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+.grp > * + * { border-top: .5px solid var(--line); }
+.pad { padding: 14px 16px; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-height: 52px; min-width: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .val { color: var(--ink2); font-size: 15px; white-space: nowrap; }
+button.row { width: 100%; background: none; border: 0; text-align: left; cursor: pointer; }
+button.row:active { background: var(--fill); }
+.chev::after { content: ""; flex: none; width: 8px; height: 8px; margin-left: 4px; border: solid var(--ink3); border-width: 2px 2px 0 0; transform: rotate(45deg); }
+
+/* Kennzahlen */
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--card); border-radius: 18px; padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
+.stat small { display: block; font-size: 13px; color: var(--ink2); }
+.stat b { display: block; font: 700 24px/1.2 var(--font); letter-spacing: -.02em; margin-top: 2px; }
+@media (min-width: 560px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* Buttons */
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+.btn {
+  flex: 1 1 auto; min-height: 50px; padding: 12px 20px; border-radius: 14px; border: 0; cursor: pointer;
+  background: var(--accent); color: var(--accentink); font: 600 16px/1.2 var(--font); text-align: center;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.btn:active { transform: scale(.97); opacity: .9; }
+.btn.soft { background: var(--tint); color: var(--accentfg); }
+.btn.gray { background: var(--fill); color: var(--ink); }
+.btn.danger { background: var(--fill); color: var(--danger); }
+.btn.sm { min-height: 40px; padding: 8px 14px; font-size: 15px; flex: 0 0 auto; border-radius: 12px; }
+.lnk { background: none; border: 0; padding: 8px 0; color: var(--accentfg); font-weight: 600; cursor: pointer; min-height: 44px; }
+
+/* Segmentiert und Chips */
+.seg { display: flex; gap: 2px; background: var(--fill); border-radius: 12px; padding: 2px; }
+.seg button { flex: 1; min-width: 0; min-height: 36px; border: 0; border-radius: 10px; background: none; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; white-space: nowrap; }
+.seg button[aria-pressed=true] { background: var(--card); box-shadow: 0 1px 3px rgba(0, 0, 0, .14); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; line-height: 1; padding: 6px 10px; border-radius: 999px; background: var(--fill); color: var(--ink2); white-space: nowrap; }
+.chip.neu { background: var(--accent); color: var(--accentink); font-weight: 600; padding: 3px 8px; font-size: 11px; margin-left: 6px; vertical-align: 2px; }
+.chip.spec { background: var(--warnbg); color: var(--warn); }
+.chip.hit { background: var(--tint); color: var(--accentfg); font-weight: 600; }
+.filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 16px 6px; margin: 0 -16px; scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.filters button { flex: none; border: 0; border-radius: 999px; padding: 8px 14px; min-height: 36px; background: var(--card); color: var(--ink); font-size: 14px; cursor: pointer; box-shadow: var(--shadow); }
+.filters button[aria-pressed=true] { background: var(--accent); color: var(--accentink); font-weight: 600; }
+
+/* Eingaben */
+input[type=text], input[type=number], input[type=search], select, textarea {
+  width: 100%; min-height: 46px; padding: 10px 14px; border: 0; border-radius: 12px; background: var(--fill); color: var(--ink); font-size: 16px;
+}
+input::placeholder { color: var(--ink3); }
+.inl { text-align: right; background: none !important; padding: 8px 0; min-height: 40px; width: 120px; flex: none; }
+select.inl { width: auto; max-width: 55%; text-align-last: right; }
+input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; }
+.flex { display: flex; gap: 8px; }
+
+/* Schalter */
+.sw { position: relative; flex: none; width: 51px; height: 31px; }
+.sw input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.sw i { position: absolute; inset: 0; border-radius: 999px; background: var(--ink3); transition: background .2s; }
+.sw i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, .25); transition: transform .2s; }
+.sw input:checked + i { background: var(--accent); }
+.sw input:checked + i::after { transform: translateX(20px); }
+.sw input:focus-visible + i { outline: 3px solid var(--accentfg); outline-offset: 2px; }
+
+/* Punkt */
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--ink3)); flex: none; }
+.dot.off { background: transparent; border: 1.5px solid var(--ink3); }
+
+.note { margin-top: 16px; padding: 12px 14px; background: var(--tint); border-radius: 14px; font-size: 14.5px; }
+
+/* Sheet */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; animation: fade .2s ease both; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; margin: 0 auto; max-width: 640px; max-height: 92vh; max-height: 92dvh;
+  background: var(--bg); border-radius: 22px 22px 0 0; display: flex; flex-direction: column; animation: up .28s cubic-bezier(.2, .9, .3, 1) both;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, .25);
+}
+.sheet.full { height: 100vh; height: 100dvh; max-height: none; border-radius: 0; }
+.shd { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px max(16px, env(safe-area-inset-left, 0px)) 8px; }
+.shd .grab { position: absolute; top: 6px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--ink3); opacity: .5; }
+.sheet.full .grab { display: none; }
+.shd h3 { font: 700 20px/1.2 var(--font); letter-spacing: -.02em; flex: 1; min-width: 0; padding-top: 6px; }
+.shb { overflow-y: auto; overscroll-behavior: contain; padding: 4px max(16px, env(safe-area-inset-left, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)); }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Tabs */
+#tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--bar);
+  -webkit-backdrop-filter: saturate(180%) blur(22px); backdrop-filter: saturate(180%) blur(22px); border-top: .5px solid var(--line);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+#tabs .in { display: flex; max-width: 640px; margin: 0 auto; }
+#tabs button { flex: 1; min-width: 0; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: 0; color: var(--ink2); cursor: pointer; font: 500 11px/1 var(--font); letter-spacing: .01em; }
+#tabs button[aria-current=page] { color: var(--accentfg); }
+#tabs button:active svg { transform: scale(.9); }
+#tabs svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transition: transform .12s; }
+#tabs button[aria-current=page] svg { stroke-width: 2.1; }
+
+.view { animation: fade .25s ease both; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.mini { margin: 0; padding-left: 20px; font-size: 14px; color: var(--ink2); line-height: 1.45; }
+.mini li + li { margin-top: 4px; }
+.mini code, .foot code { font-size: 12px; word-break: break-all; background: var(--fill); padding: 1px 5px; border-radius: 6px; }
+#syncurl { flex: 1; min-width: 0; }
+.frow input[type=time] { display: block; }
+
+/* Haushalt */
+.addf { display: flex; gap: 8px; margin: 4px 0 12px; }
+.addf input { flex: 1; min-width: 0; background: var(--card); box-shadow: var(--shadow); }
+.addf .btn { flex: 0 0 52px; padding: 0; min-height: 46px; font-size: 26px; font-weight: 500; line-height: 1; }
+.seg button { display: flex; align-items: center; justify-content: center; gap: 5px; }
+.seg button i { font-style: normal; font-size: 12px; min-width: 20px; padding: 2px 6px; border-radius: 999px; background: var(--fill); color: var(--ink2); font-weight: 600; }
+.seg button[aria-pressed=true] i { background: var(--tint); color: var(--accentfg); }
+.li { display: flex; align-items: stretch; min-height: 54px; }
+.chk { flex: none; width: 58px; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
+.chk .box { width: 26px; height: 26px; border: 1.8px solid var(--ink3); border-radius: 50%; display: block; position: relative; transition: background .15s, border-color .15s; }
+.chk:focus-visible { outline: 3px solid var(--accentfg); outline-offset: -3px; }
+.chk:active .box { transform: scale(.9); }
+.done .chk .box { background: var(--accent); border-color: var(--accent); }
+.done .chk .box::after { content: ""; position: absolute; left: 8px; top: 3px; width: 6px; height: 12px; border: solid var(--accentink); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.lt { flex: 1; min-width: 0; border: 0; background: none; text-align: left; padding: 10px 16px 10px 0; display: flex; flex-direction: column; justify-content: center; gap: 1px; cursor: pointer; }
+.lt b { font-weight: 500; font-size: 16.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.lt small { font-size: 13px; color: var(--ink2); line-height: 1.3; }
+.done .lt b { color: var(--ink3); text-decoration: line-through; }
+.done .lt small { display: none; }
+.li > .btn.sm, .li > .chip { align-self: center; margin-right: 12px; }
+.li > .chip { white-space: nowrap; }
+.li.padl .lt { padding-left: 16px; }
+.empty { text-align: center; color: var(--ink2); padding: 28px 16px; font-size: 15px; }
+.note.due { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; margin: 0 0 12px; background: var(--warnbg); }
+.note.due span { color: var(--ink2); font-size: 14px; }
+.note.due .btn { margin-top: 6px; }
+.badge { position: absolute; top: 2px; left: calc(50% + 8px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font: 700 11px/18px var(--font); text-align: center; }
+#tabs button { position: relative; }
+.toast { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 30; max-width: min(92vw, 520px); display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 11px 16px; font-size: 14.5px; box-shadow: 0 8px 28px rgba(0, 0, 0, .3); animation: up .22s ease both; }
+.toast button { background: none; border: 0; color: var(--accent); font-weight: 700; font-size: 14.5px; cursor: pointer; padding: 4px 2px; min-height: 32px; }
+.frow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; min-height: 52px; }
+.frow > label, .frow > span.lb { font-size: 15px; flex: none; }
+.frow input, .frow select { width: auto; min-width: 0; flex: 1; max-width: 62%; text-align: right; background: none; padding: 8px 0; min-height: 40px; }
+.frow .two { display: flex; gap: 8px; flex: 1; justify-content: flex-end; min-width: 0; }
+.frow .two input { max-width: 70px; flex: none; }
+.frow .two select { max-width: 110px; flex: none; text-align-last: right; }
+.frow.col { flex-direction: column; align-items: stretch; }
+.frow.col input { max-width: none; text-align: left; background: var(--fill); padding: 10px 14px; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--fill); color: var(--ink2); white-space: nowrap; }
+.pill.due { background: var(--warnbg); color: var(--warn); }
+.warnt { color: var(--warn); }
+.rt { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 16px; min-height: 46px; }
+.rt span { flex: 1; min-width: 0; font-size: 15.5px; }
+.rt button { flex: none; width: 44px; height: 40px; border: 0; border-radius: 10px; background: var(--fill); color: var(--ink2); font-size: 15px; cursor: pointer; }
+.rt button:disabled { opacity: .3; }
+.rt button:active { background: var(--tint); }
+.cp { display: flex; gap: 8px; margin-top: 10px; }
+.cp input { flex: 1; min-width: 0; font-size: 13px; }
+@media (max-width: 400px) { .seg button { font-size: 13px; padding: 0 2px; gap: 3px; } .seg button i { min-width: 18px; padding: 2px 5px; } .ltitle { font-size: 30px; } .frow { gap: 10px; padding: 6px 12px; } }
+
+.chip.q { border: 0; font: 500 14px/1.2 var(--font); padding: 9px 13px; min-height: 38px; background: var(--card); color: var(--ink); box-shadow: var(--shadow); cursor: pointer; }
+.chip.q:active { background: var(--fill); }
+.chip.q.alt { background: var(--tint); color: var(--accentfg); font-weight: 600; box-shadow: none; }
+.chip.q .sm { color: var(--ink3); font-size: 12px; }
+#sugg { margin: -4px 0 12px; }
+
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 112px; }
+.bc { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; }
+.bc i { display: block; width: 100%; max-width: 28px; min-height: 3px; border-radius: 6px 6px 3px 3px; background: var(--accent); }
+.bv { font-size: 11.5px; color: var(--ink2); min-height: 14px; }
+.bl { font-size: 11px; color: var(--ink3); }
+
+.dist { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 4px 0; font-size: 14.5px; }
+.dist b { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.dbar { height: 10px; border-radius: 999px; background: var(--fill); overflow: hidden; }
+.dbar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+[hidden] { display: none !important; }
+</style>
+<div id="app"><div id="main"></div><div id="sheetc"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<nav id="tabs" aria-label="Bereiche"><div class="in"><button type="button" data-act="tab" data-tab="list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/></svg>Liste</button><button type="button" data-act="tab" data-tab="rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16M20 20v-4h-4"/></svg>Nachkauf<span class="badge" id="rbadge" hidden></span></button><button type="button" data-act="tab" data-tab="tasks"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>Aufgaben<span class="badge" id="tbadge" hidden></span></button><button type="button" data-act="tab" data-tab="hist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Verlauf</button><button type="button" data-act="tab" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Mehr</button></div></nav>
+<script>
+/* Haushalt: Logik ohne Oberfläche (Daten, Abgleich, Fälligkeit, Kategorie-Vorschlag). */
+(function (root) {
+  'use strict';
+  const CATS = [['obst', 'Obst & Gemüse'], ['brot', 'Brot & Backwaren'], ['kuehl', 'Milch, Käse & Kühlregal'], ['fleisch', 'Fleisch, Fisch & Wurst'], ['tk', 'Tiefkühl'],
+    ['vorrat', 'Konserven & Trockenwaren'], ['suess', 'Süßes & Snacks'], ['getraenke', 'Getränke'], ['reinigung', 'Putzen & Waschen'], ['papier', 'Papier, Folien & Beutel'],
+    ['pflege', 'Körper- & Zahnpflege'], ['sonst', 'Sonstiges']];
+  const STORES = [['dis', 'Aldi/Lidl', 'Aldi oder Lidl'], ['voll', 'Marktkauf', 'Marktkauf oder Kaufland'], ['dro', 'Drogerie', 'dm oder Rossmann']];
+  const CK = CATS.map(c => c[0]), SK = STORES.map(s => s[0]);
+  const CNAME = {}; CATS.forEach(c => { CNAME[c[0]] = c[1]; });
+  const SNAME = {}; STORES.forEach(s => { SNAME[s[0]] = s[1]; });
+
+  /* Übliche Laufwege: Eingang zuerst, Kasse zuletzt. Jede Filiale ist anders, deshalb in der App änderbar. */
+  const ROUTE = {
+    dis: ['obst', 'brot', 'kuehl', 'fleisch', 'tk', 'vorrat', 'suess', 'getraenke', 'reinigung', 'papier', 'pflege', 'sonst'],
+    voll: ['obst', 'brot', 'fleisch', 'kuehl', 'tk', 'vorrat', 'suess', 'getraenke', 'reinigung', 'papier', 'pflege', 'sonst'],
+    dro: ['pflege', 'reinigung', 'papier', 'sonst', 'vorrat', 'suess', 'getraenke', 'kuehl', 'obst', 'brot', 'fleisch', 'tk']
+  };
+  const defaultRoute = () => ({ dis: ROUTE.dis.slice(), voll: ROUTE.voll.slice(), dro: ROUTE.dro.slice() });
+
+  /* Stichworte für den Kategorie-Vorschlag. Im Deutschen steht das Grundwort am Ende (Apfelsaft -> Saft), das zählt am meisten. */
+  const KW = {
+    obst: 'apfel äpfel birne birnen banane bananen orange orangen mandarine clementine zitrone zitronen limette trauben beeren erdbeere erdbeeren himbeere himbeeren blaubeeren kiwi mango ananas melone avocado avocados tomate tomaten gurke gurken paprika zucchini karotte karotten möhre möhren kartoffel kartoffeln zwiebel zwiebeln knoblauch lauch porree salat spinat brokkoli blumenkohl kürbis pilze champignons ingwer petersilie basilikum koriander radieschen kohl rotkohl weißkohl pfirsich nektarine aubergine fenchel sellerie süßkartoffel süßkartoffeln kräuter gemüse obst rucola mais paprikas pflaume pflaumen kirschen schnittlauch dill minze rosenkohl spargel rhabarber feldsalat eisbergsalat kohlrabi chicoree',
+    brot: 'brot brötchen toast baguette croissant brezel laugenbrezel kuchen laugen wrap wraps fladenbrot ciabatta knäckebrot semmel vollkornbrot toastbrot torte muffin',
+    kuehl: 'milch joghurt skyr quark käse mozzarella feta halloumi parmesan butter margarine sahne schmand frischkäse eier ei hüttenkäse kefir pudding tofu hummus aufstrich gouda emmentaler camembert mascarpone ricotta kondensmilch buttermilch pesto teig nudelteig pizzateig blätterteig',
+    fleisch: 'fleisch hähnchen hühnchen hack hackfleisch rind rindfleisch schwein schweinefleisch pute putenbrust lachs thunfisch fisch garnelen wurst schinken salami speck bacon aufschnitt bratwurst würstchen filet steak gulasch cabanossi leberwurst forelle',
+    tk: 'tiefkühl tk eis speiseeis pizza pommes fischstäbchen rahmspinat eiswürfel beerenmischung',
+    vorrat: 'nudeln spaghetti penne fusilli reis basmatireis linsen bohnen kichererbsen dose dosen mehl zucker salz pfeffer öl olivenöl rapsöl essig haferflocken müsli cornflakes couscous bulgur quinoa brühe gemüsebrühe tomatenmark passata sauce soße ketchup senf mayonnaise marmelade honig nutella erdnussbutter nüsse mandeln walnüsse rosinen backpulver hefe gewürz gewürze curry paprikapulver zimt vanille kaffee tee kakao kokosmilch sojasauce erbsen mais thunfischdose polenta maisstärke speisestärke semmelbrösel panko',
+    suess: 'schokolade gummibärchen gummibären chips kekse keks riegel bonbons süßigkeiten salzstangen erdnüsse nüsschen lakritz kaugummi popcorn waffeln müsliriegel snack knabberzeug haribo schoko',
+    getraenke: 'wasser mineralwasser sprudel saft apfelsaft orangensaft cola limo limonade bier wein sekt schorle tonic eistee energy getränk spezi fanta sprite apfelschorle',
+    reinigung: 'spülmittel spülmaschinentabs tabs waschmittel weichspüler reiniger allzweckreiniger wc-reiniger toilettenreiniger putzmittel schwamm schwämme spültuch spültücher lappen geschirrspülsalz klarspüler entkalker glasreiniger scheuermilch waschpulver fleckentferner badreiniger bürste wischtuch',
+    papier: 'toilettenpapier klopapier küchenrolle küchenrollen taschentücher alufolie backpapier frischhaltefolie gefrierbeutel müllbeutel müllsack mülltüten tüten servietten gefrierbeutel butterbrotpapier kerzen streichhölzer batterien glühbirne',
+    pflege: 'zahnpasta zahnbürste zahnseide mundspülung duschgel shampoo seife handseife deo deodorant creme bodylotion lotion rasierer rasierschaum wattepads wattestäbchen haargel haarspray conditioner spülung sonnencreme tampons binden slipeinlagen pflaster tabletten vitamine feuchttücher gesichtscreme lippenpflege parfum nagellack'
+  };
+  const KWL = [];
+  Object.keys(KW).forEach(c => KW[c].split(/\s+/).forEach(w => { if (w) KWL.push([w, c]); }));
+  const SHORT = new Set(['ei', 'öl', 'tk', 'eis']);
+
+  /* Vorschlag für die Kategorie. Gelerntes (frühere Korrekturen) hat Vorrang. */
+  function guess(name, learn) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n) return { c: 'sonst', s: '' };
+    if (learn && learn[n] && !learn[n].x) return { c: learn[n].c, s: learn[n].s || '' };
+    const toks = n.split(/[^a-zäöüß-]+/).filter(Boolean);
+    let best = null, bs = 0;
+    toks.forEach(t => {
+      KWL.forEach(([w, c]) => {
+        let sc = 0;
+        if (t === w) sc = 200 + w.length;
+        else if (SHORT.has(w)) sc = 0;
+        else if (t.endsWith(w) && w.length >= 4) sc = 100 + w.length;
+        else if (t.startsWith(w) && w.length >= 5) sc = 10 + w.length;
+        if (sc > bs) { bs = sc; best = c; }
+      });
+    });
+    return { c: best || 'sonst', s: '' };
+  }
+  /* Ohne eigene Vorgabe landen Drogerie-Dinge in der Drogerie, sonst im gerade offenen Laden. */
+  function guessStore(cat, cur) {
+    if (cat === 'pflege' || cat === 'papier' || cat === 'reinigung') return 'dro';
+    if (cur === 'dro' && ['obst', 'brot', 'kuehl', 'fleisch', 'tk'].includes(cat)) return 'dis';
+    return cur;
+  }
+
+  /* ---- Datum ---- */
+  const pad = n => (n < 10 ? '0' : '') + n;
+  const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const today = () => iso(new Date());
+  const DAY = 86400000;
+  const toDate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0); };
+  const addDays = (s, n) => iso(new Date(toDate(s).getTime() + n * DAY));
+  const diffDays = (a, b) => Math.round((toDate(a).getTime() - toDate(b).getTime()) / DAY);
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+  /* Wochen laufen Montag bis Sonntag (deutsche Kalenderwoche). */
+  const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'], WDL = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  function monday(ts) { const d = new Date(ts); d.setHours(12, 0, 0, 0); const k = (d.getDay() + 6) % 7; return iso(new Date(d.getTime() - k * DAY)); }
+  function kw(mon) { const d = toDate(mon); d.setDate(d.getDate() + 3); const y = d.getFullYear(), j = new Date(y, 0, 4, 12); const m1 = new Date(j.getTime() - ((j.getDay() + 6) % 7) * DAY); return 1 + Math.round((d.getTime() - m1.getTime() - 3 * DAY) / (7 * DAY)); }
+  const fmtDay = ts => { const d = new Date(ts); return WD[d.getDay()] + ' ' + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.'; };
+  const fmtTime = ts => { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const fmtRange = mon => { const a = toDate(mon), b = new Date(a.getTime() + 6 * DAY); return pad(a.getDate()) + '.' + pad(a.getMonth() + 1) + '. bis ' + pad(b.getDate()) + '.' + pad(b.getMonth() + 1) + '.'; };
+
+  /* Fälligkeit eines Dauerartikels: left <= 0 heißt fällig. */
+  function due(rec, t) {
+    const next = addDays(rec.l, rec.e);
+    return { next, left: diffDays(next, t || today()) };
+  }
+  function everyText(e) {
+    if (e % 30 === 0 && e >= 30) { const m = e / 30; return m === 1 ? 'jeden Monat' : 'alle ' + m + ' Monate'; }
+    if (e % 7 === 0) { const w = e / 7; return w === 1 ? 'jede Woche' : 'alle ' + w + ' Wochen'; }
+    return e === 1 ? 'jeden Tag' : 'alle ' + e + ' Tage';
+  }
+  function leftText(l) {
+    if (l < 0) return (l === -1 ? 'seit gestern' : 'seit ' + (-l) + ' Tagen') + ' fällig';
+    if (l === 0) return 'heute fällig';
+    if (l === 1) return 'morgen fällig';
+    if (l < 14) return 'in ' + l + ' Tagen';
+    if (l < 60) return 'in ' + Math.round(l / 7) + ' Wochen';
+    return 'in ' + Math.round(l / 30) + ' Monaten';
+  }
+
+  /* ---- Startbestand: gängige Dauerartikel [Name, Laden, Kategorie, Tage] ---- */
+  const SEED = [
+    ['Toilettenpapier', 'dro', 'papier', 28], ['Küchenrollen', 'dro', 'papier', 28], ['Taschentücher', 'dro', 'papier', 42], ['Müllbeutel', 'dro', 'papier', 42],
+    ['Alufolie', 'dro', 'papier', 90], ['Backpapier', 'dro', 'papier', 90], ['Frischhaltefolie', 'dro', 'papier', 120], ['Gefrierbeutel', 'dro', 'papier', 120],
+    ['Spülmittel', 'dro', 'reinigung', 42], ['Spülmaschinentabs', 'dro', 'reinigung', 35], ['Geschirrspülsalz', 'dro', 'reinigung', 120], ['Waschmittel', 'dro', 'reinigung', 56],
+    ['Weichspüler', 'dro', 'reinigung', 84], ['Allzweckreiniger', 'dro', 'reinigung', 90], ['WC-Reiniger', 'dro', 'reinigung', 60], ['Spülschwämme', 'dro', 'reinigung', 60],
+    ['Spültücher', 'dro', 'reinigung', 90], ['Duschgel', 'dro', 'pflege', 42], ['Shampoo', 'dro', 'pflege', 56], ['Handseife', 'dro', 'pflege', 42],
+    ['Zahnpasta', 'dro', 'pflege', 56], ['Deo', 'dro', 'pflege', 60], ['Wattepads', 'dro', 'pflege', 90],
+    ['Kaffee', 'dis', 'vorrat', 21], ['Olivenöl', 'dis', 'vorrat', 60], ['Salz', 'dis', 'vorrat', 180], ['Gemüsebrühe', 'dis', 'vorrat', 90]
+  ];
+
+  /* Vorrat an gängigen Artikeln zum Antippen (Name, Abteilung). Der Laden ergibt sich aus der Abteilung. */
+  const CATALOG = [
+    ['Äpfel', 'obst'], ['Bananen', 'obst'], ['Birnen', 'obst'], ['Trauben', 'obst'], ['Zitronen', 'obst'], ['Orangen', 'obst'], ['Beeren', 'obst'], ['Tomaten', 'obst'], ['Gurke', 'obst'], ['Paprika', 'obst'],
+    ['Zucchini', 'obst'], ['Karotten', 'obst'], ['Kartoffeln', 'obst'], ['Zwiebeln', 'obst'], ['Knoblauch', 'obst'], ['Salat', 'obst'], ['Brokkoli', 'obst'], ['Champignons', 'obst'], ['Avocado', 'obst'], ['Ingwer', 'obst'], ['Petersilie', 'obst'],
+    ['Brot', 'brot'], ['Brötchen', 'brot'], ['Toast', 'brot'], ['Wraps', 'brot'],
+    ['Milch', 'kuehl'], ['Joghurt', 'kuehl'], ['Skyr', 'kuehl'], ['Quark', 'kuehl'], ['Butter', 'kuehl'], ['Eier', 'kuehl'], ['Käse', 'kuehl'], ['Mozzarella', 'kuehl'], ['Feta', 'kuehl'], ['Frischkäse', 'kuehl'], ['Sahne', 'kuehl'], ['Hummus', 'kuehl'], ['Tofu', 'kuehl'], ['Hüttenkäse', 'kuehl'],
+    ['Hähnchenbrust', 'fleisch'], ['Hackfleisch', 'fleisch'], ['Lachs', 'fleisch'], ['Schinken', 'fleisch'], ['Aufschnitt', 'fleisch'], ['Garnelen', 'fleisch'],
+    ['TK-Spinat', 'tk'], ['TK-Gemüse', 'tk'], ['TK-Pizza', 'tk'], ['TK-Beeren', 'tk'], ['Pommes', 'tk'], ['Eis', 'tk'],
+    ['Nudeln', 'vorrat'], ['Reis', 'vorrat'], ['Haferflocken', 'vorrat'], ['Müsli', 'vorrat'], ['Linsen', 'vorrat'], ['Kichererbsen (Dose)', 'vorrat'], ['Tomaten (Dose)', 'vorrat'], ['Passata', 'vorrat'], ['Olivenöl', 'vorrat'], ['Mehl', 'vorrat'], ['Zucker', 'vorrat'],
+    ['Kaffee', 'vorrat'], ['Tee', 'vorrat'], ['Nüsse', 'vorrat'], ['Erdnussbutter', 'vorrat'], ['Honig', 'vorrat'], ['Marmelade', 'vorrat'], ['Kokosmilch', 'vorrat'], ['Sojasauce', 'vorrat'], ['Gemüsebrühe', 'vorrat'], ['Couscous', 'vorrat'], ['Bulgur', 'vorrat'], ['Mais (Dose)', 'vorrat'], ['Kidneybohnen (Dose)', 'vorrat'], ['Thunfisch (Dose)', 'vorrat'],
+    ['Schokolade', 'suess'], ['Gummibärchen', 'suess'], ['Chips', 'suess'], ['Kekse', 'suess'], ['Müsliriegel', 'suess'],
+    ['Wasser', 'getraenke'], ['Apfelsaft', 'getraenke'], ['Cola', 'getraenke'], ['Bier', 'getraenke'],
+    ['Spülmittel', 'reinigung'], ['Waschmittel', 'reinigung'], ['Spülmaschinentabs', 'reinigung'], ['Allzweckreiniger', 'reinigung'], ['Spülschwämme', 'reinigung'],
+    ['Toilettenpapier', 'papier'], ['Küchenrolle', 'papier'], ['Taschentücher', 'papier'], ['Müllbeutel', 'papier'], ['Alufolie', 'papier'], ['Backpapier', 'papier'], ['Gefrierbeutel', 'papier'],
+    ['Zahnpasta', 'pflege'], ['Duschgel', 'pflege'], ['Shampoo', 'pflege'], ['Deo', 'pflege'], ['Handseife', 'pflege'], ['Wattepads', 'pflege'], ['Rasierer', 'pflege']
+  ];
+  /* Alle bekannten Artikel: Vorrat plus das, was ihr schon gekauft habt (fav). Gekauftes hat Vorrang. */
+  function known(fav) {
+    const out = {};
+    CATALOG.forEach(([n, c]) => { out[n.toLowerCase()] = { key: n.toLowerCase(), n, c, s: guessStore(c, 'dis'), k: 0 }; });
+    Object.keys(fav || {}).forEach(key => { const f = fav[key]; if (f && !f.x) out[key] = { key, n: f.n, c: f.c, s: f.s, k: f.k || 0 }; });
+    return Object.keys(out).map(k => out[k]);
+  }
+  function suggest(q, list, skip) {
+    q = String(q || '').trim().toLowerCase(); if (!q) return [];
+    const sw = e => e.n.toLowerCase().startsWith(q) ? 0 : 1;
+    return list.filter(e => e.n.toLowerCase().includes(q) && !(skip && skip.has(e.key))).sort((a, b) => sw(a) - sw(b) || b.k - a.k || a.n.localeCompare(b.n, 'de')).slice(0, 6);
+  }
+
+  /* ---------- Aufgaben im Haushalt ----------
+     e = Rhythmus in Tagen, d = Wochentag (-1 beliebig, -2 Tag der Haushaltsrunde, 0..6 So..Sa), w = zuständig (0, 1, 2 = abwechselnd),
+     af = Folgeaufgabe von (wird ausgelöst, wenn die andere erledigt ist), t = Auslösedatum, l = zuletzt erledigt, lw = von wem zuletzt. */
+  const TSEED = [
+    // Name, Rhythmus (Tage), Wochentag, Minuten, zuständig, folgt auf, Mindeststandard, prüfen
+    ['Spülmaschine ausräumen', 1, -1, 5, 2, '', 'Alles an seinem Platz, Maschine leer', 0],
+    ['Spülmaschine einräumen', 1, -1, 5, 2, '', 'Geschirr aus Spüle und von der Arbeitsplatte drin, Tab rein', 0],
+    ['Wäsche waschen', 7, -2, 10, 2, '', 'Abends mit Timer starten, morgens direkt aufhängen', 0],
+    ['Wäsche aufhängen', 0, -1, 10, 2, 'Wäsche waschen', 'Gleich nach dem Waschen, nicht liegen lassen', 0],
+    ['Wäsche abhängen', 0, -1, 10, 2, 'Wäsche aufhängen', 'Sofort falten, nicht auf dem Ständer lagern', 0],
+    ['Wäsche einsortieren', 0, -1, 10, 2, 'Wäsche abhängen', 'Jeder räumt seine eigenen Sachen ein', 0],
+    ['Hemden bügeln', 0, -1, 30, 0, 'Wäsche abhängen', 'Nur was diese Woche gebraucht wird', 0],
+    ['Staubsaugerroboter leeren und Bürste reinigen', 7, -2, 10, 2, '', 'Behälter leer, Haare aus der Bürste', 0],
+    ['Böden nachsaugen (Ecken, Treppe)', 14, -2, 15, 2, '', 'Was der Roboter nicht erreicht', 0],
+    ['Böden wischen', 14, -2, 25, 2, '', '', 0],
+    ['Bad putzen', 7, -2, 25, 2, '', 'WC, Waschbecken, Dusche, Spiegel, Boden', 0],
+    ['Küche gründlich putzen', 7, -2, 25, 2, '', 'Herd, Arbeitsflächen, Fronten, Spüle', 0],
+    ['Staub wischen', 14, -2, 15, 2, '', '', 0],
+    ['Bettwäsche wechseln', 14, -2, 15, 2, '', '', 0],
+    ['Handtücher wechseln', 7, -2, 5, 2, '', '', 0],
+    ['Kühlschrank aufräumen', 7, -2, 10, 2, '', 'Abgelaufenes raus, Liste prüfen', 0],
+    ['Fenster putzen', 42, -2, 45, 2, '', '', 0],
+    ['Backofen reinigen', 90, -2, 30, 2, '', '', 0],
+    ['Kühlschrank reinigen', 60, -2, 20, 2, '', '', 0],
+    ['Spülmaschine reinigen (Sieb, Dichtung)', 30, -2, 10, 2, '', '', 0],
+    ['Waschmaschine reinigen (Flusensieb, Gummi)', 60, -2, 10, 2, '', '', 0]
+  ];
+
+  /* ---------- Müllkalender ----------
+     mu[id] = { n: Name, a: 1 = Tonne rausstellen (Erinnerung am Vorabend), d: [Abholtage], dn: Abholtag, der als „rausgestellt“ abgehakt ist, m } */
+  const MU_SEED = {"restabfall":{"n":"Restabfall","a":1,"d":["2026-06-09","2026-06-23","2026-07-07","2026-07-21","2026-08-04","2026-08-18","2026-09-01","2026-09-15","2026-09-29","2026-10-13","2026-10-27","2026-11-10","2026-11-24","2026-12-08","2026-12-21","2027-01-05","2027-01-19","2027-02-02","2027-02-16","2027-03-02","2027-03-16","2027-03-31","2027-04-13","2027-04-27","2027-05-11","2027-05-25","2027-06-08","2027-06-22","2027-07-06","2027-07-20","2027-08-03","2027-08-17","2027-08-31","2027-09-14","2027-09-28","2027-10-12","2027-10-26","2027-11-09","2027-11-23","2027-12-07","2027-12-20"]},"papiertonne":{"n":"Papiertonne","a":1,"d":["2026-06-09","2026-07-07","2026-08-04","2026-09-01","2026-09-29","2026-10-27","2026-11-24","2026-12-21","2027-01-19","2027-02-16","2027-03-16","2027-04-13","2027-05-11","2027-06-08","2027-07-06","2027-08-03","2027-08-31","2027-09-28","2027-10-26","2027-11-23","2027-12-21"]},"gelbetonne":{"n":"Gelbe Tonne","a":1,"d":["2026-06-12","2026-07-10","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04","2027-01-28","2027-02-25","2027-03-24","2027-04-22","2027-05-21","2027-06-17","2027-07-15","2027-08-12","2027-09-09","2027-10-07","2027-11-05","2027-12-02","2027-12-30"]},"komposttonne":{"n":"Komposttonne","a":1,"d":["2026-06-02","2026-06-16","2026-06-30","2026-07-14","2026-07-28","2026-08-11","2026-08-25","2026-09-08","2026-09-22","2026-10-06","2026-10-20","2026-11-03","2026-11-17","2026-12-01","2026-12-15","2026-12-29","2027-01-12","2027-01-26","2027-02-09","2027-02-23","2027-03-09","2027-03-22","2027-04-06","2027-04-20","2027-05-04","2027-05-19","2027-06-01","2027-06-15","2027-06-29","2027-07-13","2027-07-27","2027-08-10","2027-08-24","2027-09-07","2027-09-21","2027-10-05","2027-10-19","2027-11-03","2027-11-16","2027-11-30","2027-12-14","2027-12-28"]},"schadstoffmobil":{"n":"Schadstoffmobil","a":0,"d":["2026-06-12","2026-07-03","2026-08-07","2026-08-18","2026-08-19","2026-09-04","2026-10-02","2026-11-06","2026-12-04","2027-01-09","2027-02-05","2027-03-05","2027-04-02","2027-04-12","2027-04-13","2027-05-14","2027-06-04","2027-07-02","2027-08-06","2027-08-17","2027-08-18","2027-09-03","2027-10-01","2027-11-05","2027-12-03"]}};
+  const MU_IDS = { restabfall: 'restabfall', rest: 'restabfall', papier: 'papiertonne', gelb: 'gelbetonne', kompost: 'komposttonne', bio: 'komposttonne', schadstoff: 'schadstoffmobil' };
+  function seedMuell() { const o = {}; Object.keys(MU_SEED).forEach(k => { o[k] = { n: MU_SEED[k].n, a: MU_SEED[k].a, d: MU_SEED[k].d.slice(), dn: '', m: 1 }; }); return o; }
+  /* ICS lesen: Zeilen zusammenfügen, VEVENTs auslesen. Rückgabe: { Name: [Tage] }. UTC-Zeiten (Z) werden in die Ortszeit umgerechnet. */
+  function parseIcs(text) {
+    const lines = String(text || '').replace(/\r\n?/g, '\n').replace(/\n[ \t]/g, '').split('\n'), out = {};
+    let cur = null;
+    lines.forEach(l => {
+      if (l === 'BEGIN:VEVENT') { cur = {}; return; }
+      if (l === 'END:VEVENT') {
+        if (cur && cur.n && cur.d) { (out[cur.n] = out[cur.n] || []); if (!out[cur.n].includes(cur.d)) out[cur.n].push(cur.d); }
+        cur = null; return;
+      }
+      if (!cur || l.startsWith('BEGIN:VALARM')) return;
+      const i = l.indexOf(':'); if (i < 1) return;
+      const key = l.slice(0, i).split(';')[0].toUpperCase(), val = l.slice(i + 1).trim();
+      if (key === 'SUMMARY' && !cur.n) cur.n = val.replace(/\\([,;])/g, '$1').slice(0, 30);
+      if (key === 'DTSTART' && !cur.d) {
+        const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(val);
+        if (m) cur.d = m[7] ? iso(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]))) : m[1] + '-' + m[2] + '-' + m[3];
+      }
+    });
+    Object.keys(out).forEach(k => out[k].sort());
+    return out;
+  }
+  function muId(name) {
+    const low = name.toLowerCase();
+    for (const k of Object.keys(MU_IDS)) if (low.includes(k)) return MU_IDS[k];
+    return (low.replace(/[^a-z0-9]/g, '') || 'muell').slice(0, 20);
+  }
+  /* Import: Termine im Zeitraum der Datei ersetzen, alles außerhalb bleibt. Neue Arten werden angelegt. Rückgabe: Anzahl Termine. */
+  function muImport(mu, parsed, now) {
+    let n = 0;
+    Object.keys(parsed).forEach(name => {
+      const id = muId(name), dates = parsed[name], old = mu[id] && !mu[id].x ? mu[id] : null;
+      const lo = dates[0], hi = dates[dates.length - 1];
+      const keep = old ? old.d.filter(d => d < lo || d > hi) : [];
+      const all = Array.from(new Set(keep.concat(dates))).sort().slice(-400);
+      mu[id] = { n: old ? old.n : name, a: old ? old.a : (/schadstoff|sperr|elektro/i.test(name) ? 0 : 1), d: all, dn: old ? old.dn : '', m: now };
+      n += dates.length;
+    });
+    return n;
+  }
+  /* Nächster Abholtag ab t0 (heute zählt mit) oder ''. */
+  const muNext = (r, t0) => (r.d.find(d => d >= t0) || '');
+
+  /* ---------- Wissen: Tipps je Aufgabe, Reihenfolge der Haushaltsrunde, kleines Wiki ---------- */
+  const TIPS = {
+    'Spülmaschine ausräumen': 'Morgens beim Kaffee. Erst unten, dann oben, damit nichts tropft.',
+    'Spülmaschine einräumen': 'Alles gleich rein, nichts in der Spüle stehen lassen. Dann spülst du nie von Hand.',
+    'Wäsche waschen': 'Ein Sack voll heißt: Maschine an. Abends mit Timer starten, morgens direkt aufhängen.',
+    'Wäsche aufhängen': 'Glatt ziehen und Hemden auf den Bügel hängen. Das spart oft das Bügeln.',
+    'Wäsche abhängen': 'Sofort falten oder auf den Bügel, nicht auf dem Ständer lagern.',
+    'Wäsche einsortieren': 'Jeder räumt seine Sachen selbst ein. Fester Platz für alles, dann geht es in Sekunden.',
+    'Hemden bügeln': 'Ein Block, nebenbei Podcast. Erst Kragen und Manschetten, dann der Rest. Nur, was diese Woche gebraucht wird.',
+    'Staubsaugerroboter leeren und Bürste reinigen': 'Haare aus der Bürste schneiden, Behälter ausklopfen. Der Roboter fährt dann besser.',
+    'Böden nachsaugen (Ecken, Treppe)': 'Erst Staub wischen, dann saugen. So fällt nichts mehr auf den sauberen Boden.',
+    'Böden wischen': 'Immer als Letztes. Von hinten zur Tür, mit Wechselbezug statt Eimer.',
+    'Bad putzen': 'Erst Reiniger in Dusche und WC einsprühen und 5 bis 10 Minuten einwirken lassen. Dann Waschbecken, Spiegel, zuletzt Boden. In der Wartezeit etwas anderes machen.',
+    'Küche gründlich putzen': 'Reiniger auf Herd und Fettstellen sprühen, einwirken lassen. Von oben nach unten, Boden zuletzt.',
+    'Staub wischen': 'Mikrofasertuch, von oben nach unten, vor dem Saugen.',
+    'Bettwäsche wechseln': 'Zweites Set haben: Frisches sofort aufziehen, das benutzte in den Sack. Dann gibt es keine Wartezeit.',
+    'Handtücher wechseln': 'Alle auf einmal, in den Handtuchsack. Handtücher mit 60 °C waschen.',
+    'Kühlschrank aufräumen': 'Direkt vor dem Einkauf. Dann siehst du, was fehlt, und kaufst nichts doppelt.',
+    'Fenster putzen': 'Bei bedecktem Himmel, sonst gibt es Streifen. Erst Rahmen, dann Scheibe, mit Abzieher.',
+    'Backofen reinigen': 'Reiniger einsprühen, über Nacht wirken lassen, morgens abwischen.',
+    'Kühlschrank reinigen': 'Wenn er vor dem Einkauf fast leer ist. Fächer raus, mit warmem Wasser und etwas Spülmittel auswischen.',
+    'Spülmaschine reinigen (Sieb, Dichtung)': 'Sieb ausspülen, Dichtung abwischen, ab und zu Leerlauf mit Maschinenreiniger.',
+    'Waschmaschine reinigen (Flusensieb, Gummi)': 'Flusensieb leeren, Gummi trocknen, Tür offen lassen. Ab und zu ein heißer Leerlauf.'
+  };
+  /* Beste Reihenfolge an einem Tag: Wäsche zuerst (läuft im Hintergrund), Reiniger früh einwirken lassen, Boden zuletzt. */
+
+  /* ---------- Katalog mit Richtwerten (Rhythmus + Begründung) ---------- */
+  // Verbrauchsartikel: Name, Laden, Abteilung, Tage, Begründung
+  const CAT_REC = [
+    ['Zahnbürste / Aufsteckbürste', 'dro', 'pflege', 90, 'Alle 3 Monate wechseln, früher bei ausgefransten Borsten.'],
+    ['Zahnseide / Interdentalbürsten', 'dro', 'pflege', 60, 'Eine Packung reicht bei täglicher Nutzung etwa 2 Monate.'],
+    ['Rasierklingen', 'dro', 'pflege', 42, 'Je nach Bart 2 bis 6 Wochen. Stumpfe Klingen reizen die Haut.'],
+    ['Wattestäbchen', 'dro', 'pflege', 120, ''],
+    ['Staubsaugerbeutel', 'dro', 'reinigung', 60, 'Wechseln, wenn der Beutel zu etwa zwei Dritteln voll ist.'],
+    ['Staubsaugerfilter / Roboter-Bürste', 'dro', 'reinigung', 90, 'Filter und Seitenbürste des Roboters alle 2 bis 3 Monate tauschen.'],
+    ['Wasserfilter-Kartusche', 'dro', 'reinigung', 28, 'Meist alle 4 Wochen, sonst Keim- und Kalkgefahr.'],
+    ['Entkalker', 'dro', 'reinigung', 90, 'Für Kaffeemaschine, Wasserkocher und Duschkopf.'],
+    ['Maschinenreiniger (Spül- und Waschmaschine)', 'dro', 'reinigung', 90, 'Für den regelmäßigen heißen Leerlauf.'],
+    ['Spülbürste', 'dro', 'reinigung', 90, ''],
+    ['Toilettenbürste (Ersatz)', 'dro', 'reinigung', 365, 'Einmal im Jahr ersetzen.'],
+    ['Biomüllbeutel', 'dro', 'papier', 42, ''],
+    ['Batterien (AA / AAA)', 'dro', 'sonst', 180, ''],
+    ['Feuchttücher', 'dro', 'pflege', 90, '']
+  ];
+  // Aufgaben: Name, Tage, Minuten, Begründung
+  const CAT_TK = [
+    ['Putztücher und Mikrofasertücher waschen', 14, 5, 'Mit 60 °C waschen, ohne Weichspüler, sonst nehmen sie nichts mehr auf.'],
+    ['Mülleimer reinigen', 30, 5, 'Innen auswischen und trocknen lassen, gegen Geruch.'],
+    ['Toilettenbürste und Halter reinigen', 30, 5, 'Mit heißem Wasser und WC-Reiniger durchspülen.'],
+    ['Wasserkocher entkalken', 30, 5, 'Bei hartem Wasser alle 2 bis 4 Wochen.'],
+    ['Kaffeemaschine entkalken', 60, 15, 'Alle 2 bis 3 Monate, sonst steigt der Verbrauch und der Geschmack leidet.'],
+    ['Duschkopf und Armaturen entkalken', 60, 10, 'In Entkalker einlegen, dann abspülen. Währenddessen etwas anderes erledigen.'],
+    ['Fettfilter der Dunstabzugshaube reinigen', 60, 15, 'In die Spülmaschine oder in heißes Spülwasser legen.'],
+    ['Matratze lüften und wenden', 90, 10, 'Alle 3 Monate wenden (falls möglich), Bett offen lüften.'],
+    ['Kopfkissen und Bettdecke waschen', 120, 20, 'Alle 3 bis 6 Monate, nach Pflegeetikett.'],
+    ['Vorhänge waschen', 180, 15, 'Zweimal im Jahr, nach Pflegeetikett.'],
+    ['Rauchmelder testen', 365, 5, 'Mindestens einmal im Jahr den Testknopf drücken.']
+  ];
+  CAT_TK.forEach(x => { if (x[3]) TIPS[x[0]] = x[3]; });
+  const RUNDE_ORDER = ['Wäsche waschen', 'Bettwäsche wechseln', 'Handtücher wechseln', 'Bad putzen', 'Küche gründlich putzen', 'Backofen reinigen', 'Staub wischen', 'Kühlschrank aufräumen', 'Kühlschrank reinigen', 'Fenster putzen', 'Spülmaschine reinigen (Sieb, Dichtung)', 'Waschmaschine reinigen (Flusensieb, Gummi)', 'Staubsaugerroboter leeren und Bürste reinigen', 'Böden nachsaugen (Ecken, Treppe)', 'Böden wischen'];
+  const ordIdx = n => { const i = RUNDE_ORDER.indexOf(n); return i < 0 ? 99 : i; };
+  const WIKI = [
+    ['Das Grundprinzip', ['Zeit sparst du durch weniger Handgriffe, nicht durch schnelleres Putzen.', 'Kleine Mengen Schmutz sind leicht, alter Schmutz ist mühsam. Wer kurz und regelmäßig putzt, braucht insgesamt am wenigsten.', 'Weniger Besitz heißt weniger Wäsche, weniger Staub, weniger Aufräumen.']],
+    ['Vermeiden statt putzen', ['Schuhe an der Tür ausziehen, Fußmatte davor. Das spart viel Boden und Staub.', 'Jedes Ding hat einen festen Platz. Aufräumen kostet oft mehr Zeit als Putzen.', 'Freie Flächen in Bad und Küche sind in Sekunden sauber.', 'Unter 2 Minuten: sofort machen (Tasse in die Maschine, Spiegel abziehen).']],
+    ['Haushaltsrunde bündeln', ['Ein fester Tag pro Woche für alles Größere. Jedes Mal Putzzeug holen und wegräumen kostet Zeit.', 'Reihenfolge: Wäsche anwerfen, Reiniger in Bad und Küche einsprühen, Staub wischen, Bad und Küche fertig putzen, saugen, zuletzt wischen.', 'Immer von oben nach unten und von hinten nach vorn, nie zweimal über dieselbe Fläche.', 'Putzmittel dort lagern, wo sie gebraucht werden.']],
+    ['Einwirken lassen', ['Reiniger aufsprühen, 5 bis 10 Minuten warten, dann nur abwischen. Das ist der größte Hebel beim Putzen.', 'Backofen: abends einsprühen, morgens abwischen.', 'In der Wartezeit etwas anderes erledigen.']],
+    ['Wäsche-System', ['Drei Säcke: 30 °C (Dunkles, Empfindliches, Sport), 40 °C (Alltag, Buntes, Hemden) und Handtücher mit Bettwäsche (60 °C). Das Pflegeetikett geht vor. So entfällt das Sortieren.', 'Ein Sack voll heißt: Maschine an. Abends mit Timer starten, morgens direkt aufhängen.', 'Gleich nach dem Trocknen falten und wegräumen.', 'Handtücher und Bettwäsche reichen alle 14 Tage, Handtücher bei viel Nutzung wöchentlich.']],
+    ['Bügeln minimieren', ['Bügelfreie oder pflegeleichte Hemden kaufen. Das spart am meisten.', 'Glatt ziehen und feucht auf den Bügel hängen.', 'Nur bügeln, was diese Woche gebraucht wird, in einem Block.', 'Ein Dampfglätter ist für Hemden oft schneller als das Bügeleisen.']],
+    ['Technik für das Langweilige', ['Saugroboter täglich oder jeden zweiten Tag, du saugst nur noch Ecken und Treppe nach.', 'Spülmaschine so nutzen, dass nichts von Hand gespült wird.', 'Mikrofasertücher und ein Wischsystem mit Wechselbezug statt Eimer und Lappen.']],
+    ['Routinen verankern', ['Koppel Aufgaben an etwas, das du sowieso tust (Kaffee kochen, ins Bett gehen). Dann brauchst du keine Disziplin.', 'Zwei bis drei Mini-Routinen täglich und ein langer Block pro Woche sind effizienter als jeden Tag eine Stunde.', 'Seltenes (Backofen, Fenster, Maschinen reinigen) bekommt einen festen Rhythmus in der App.']]
+  ];
+  function snapWd(day, wd) { const w = toDate(day).getDay(); let diff = (wd - w + 7) % 7; if (diff > 3) diff -= 7; return addDays(day, diff); }
+  /* Nächster Termin einer Aufgabe oder '' (pausiert, oder Folgeaufgabe, die noch nicht ausgelöst ist). */
+  function nextDue(t, round) {
+    if (t.p) return '';
+    if (t.af) return t.t || '';
+    if (!t.e) return '';
+    const target = addDays(t.l, t.e), wd = t.d === -2 ? round : t.d;
+    return wd >= 0 && t.e % 7 === 0 ? snapWd(target, wd) : target;
+  }
+  function seedTasks(now, round) {
+    const t0 = iso(new Date(now)), out = {}, idOf = {};
+    TSEED.forEach(([n]) => { idOf[n] = 't' + hash(n).toString(36); });
+    TSEED.forEach(([n, e, d, min, w, af, q, chk], i) => {
+      const back = e ? Math.round(e * (0.3 + (hash(n + 'y') % 60) / 100)) : 0;
+      out[idOf[n]] = { n, e, d, min, w, l: e ? addDays(t0, -(e === 1 ? 1 : back)) : t0, lw: w === 2 ? (i % 2) : -1, t: '', af: af ? idOf[af] : '', q, p: 0, chk, m: 1 };
+    });
+    return out;
+  }
+  /* Durchschnittliche Minuten pro Woche je Person. Folgeaufgaben laufen im Rhythmus ihrer Ausgangsaufgabe. */
+  function weekly(tasks) {
+    const by = {}; tasks.forEach(t => { by[t.id] = t; });
+    const sum = [0, 0];
+    tasks.forEach(t => {
+      if (t.p) return;
+      let r = t, k = 0; while (r && r.af && k++ < 6) r = by[r.af];
+      if (!r || r.p || !r.e) return;
+      const pw = t.min * 7 / r.e;
+      if (t.w === 2) { sum[0] += pw / 2; sum[1] += pw / 2; } else sum[t.w === 1 ? 1 : 0] += pw;
+    });
+    return sum;
+  }
+
+  const uid = () => { let s = ''; const cs = 'abcdefghijklmnopqrstuvwxyz0123456789'; for (let i = 0; i < 10; i++) s += cs[Math.floor(Math.random() * cs.length)]; return s; };
+  const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
+
+  /* Startwerte „zuletzt gekauft“ verteilen, damit nicht alles am selben Tag fällig wird. */
+  function seed(now) {
+    const t = iso(new Date(now)), rec = {};
+    SEED.forEach(([n, s, c, e]) => {
+      const id = 's' + hash(n).toString(36);
+      const back = Math.round(e * (0.35 + (hash(n + "x") % 85) / 100));
+      rec[id] = { n, s, c, e, l: addDays(t, -back), p: 0, m: 1 };
+    });
+    return rec;
+  }
+
+  /* ---- Abgleich: je Eintrag gewinnt der neuere Zeitstempel; Löschungen bleiben als Marke (x) ---- */
+  const TOMB = 45 * DAY;
+  function pick(a, b) {
+    if (!a) return b; if (!b) return a;
+    if (a.m !== b.m) return a.m > b.m ? a : b;
+    return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
+  }
+  function mergeMap(a, b, now) {
+    const out = {}, keys = new Set(Object.keys(a || {}).concat(Object.keys(b || {})));
+    keys.forEach(k => { const v = pick((a || {})[k], (b || {})[k]); if (v.x && v.m < now - TOMB) return; out[k] = v; });
+    return out;
+  }
+  function merge(a, b, now) {
+    now = now || Date.now();
+    const set = pick(a.set, b.set);
+    return { v: 1, items: mergeMap(a.items, b.items, now), rec: mergeMap(a.rec, b.rec, now), lrn: mergeMap(a.lrn, b.lrn, now), tk: mergeMap(a.tk, b.tk, now), trips: mergeMap(a.trips, b.trips, now), mu: mergeMap(a.mu, b.mu, now), fav: mergeMap(a.fav, b.fav, now), set };
+  }
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+  /* ---- Fremde Daten prüfen ---- */
+  const ID_RE = /^[a-z0-9]{4,24}$/;
+  const str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+  const num = v => typeof v === 'number' && isFinite(v) ? v : 0;
+  function cleanRoute(r) {
+    const out = {};
+    SK.forEach(s => {
+      const src = r && Array.isArray(r[s]) ? r[s].filter((c, i, a) => CK.includes(c) && a.indexOf(c) === i) : [];
+      ROUTE[s].forEach(c => { if (!src.includes(c)) src.push(c); });
+      out[s] = src;
+    });
+    return out;
+  }
+  function cleanDoc(d) {
+    if (!d || typeof d !== 'object' || d.v !== 1) return null;
+    const out = { v: 1, items: {}, rec: {}, lrn: {}, fav: {}, trips: {}, tk: {}, mu: {}, set: null };
+    Object.keys(d.items || {}).slice(0, 2000).forEach(k => {
+      const x = d.items[k]; if (!ID_RE.test(k) || !x || typeof x !== 'object') return;
+      if (x.x) { out.items[k] = { x: 1, m: num(x.m) }; return; }
+      out.items[k] = { n: str(x.n, 80), s: SK.includes(x.s) ? x.s : 'dis', c: CK.includes(x.c) ? x.c : 'sonst', q: str(x.q, 120), b: x.b === 1 ? 1 : 0, d: x.d ? 1 : 0, r: ID_RE.test(x.r || '') ? x.r : '', m: num(x.m) };
+    });
+    Object.keys(d.rec || {}).slice(0, 500).forEach(k => {
+      const x = d.rec[k]; if (!ID_RE.test(k) || !x || typeof x !== 'object') return;
+      if (x.x) { out.rec[k] = { x: 1, m: num(x.m) }; return; }
+      const e = Math.round(num(x.e));
+      out.rec[k] = { n: str(x.n, 60), s: SK.includes(x.s) ? x.s : 'dis', c: CK.includes(x.c) ? x.c : 'sonst', e: Math.min(730, Math.max(1, e || 30)), l: DATE_RE.test(x.l || '') ? x.l : today(), p: x.p ? 1 : 0, m: num(x.m) };
+    });
+    Object.keys(d.lrn || {}).slice(0, 500).forEach(k => {
+      const x = d.lrn[k]; if (!x || typeof x !== 'object' || k.length > 60) return;
+      if (x.x) { out.lrn[k] = { x: 1, m: num(x.m) }; return; }
+      out.lrn[k] = { c: CK.includes(x.c) ? x.c : 'sonst', s: SK.includes(x.s) ? x.s : '', m: num(x.m) };
+    });
+    Object.keys(d.fav || {}).slice(0, 1000).forEach(k => {
+      const x = d.fav[k]; if (!x || typeof x !== 'object' || k.length > 60) return;
+      if (x.x) { out.fav[k] = { x: 1, m: num(x.m) }; return; }
+      out.fav[k] = { n: str(x.n, 80), c: CK.includes(x.c) ? x.c : 'sonst', s: SK.includes(x.s) ? x.s : 'dis', k: Math.min(9999, Math.max(0, Math.round(num(x.k)))), m: num(x.m) };
+    });
+    Object.keys(d.trips || {}).slice(0, 3000).forEach(k => {
+      const x = d.trips[k]; if (!ID_RE.test(k) || !x || typeof x !== 'object') return;
+      if (x.x) { out.trips[k] = { x: 1, m: num(x.m) }; return; }
+      const it = Array.isArray(x.it) ? x.it.slice(0, 80).map(v => str(v, 60)).filter(Boolean) : [];
+      out.trips[k] = { s: SK.includes(x.s) ? x.s : 'dis', t: num(x.t), b: x.b === 1 ? 1 : 0, n: Math.min(999, Math.max(it.length, Math.round(num(x.n)))), it, m: num(x.m) };
+    });
+    Object.keys(d.tk || {}).slice(0, 500).forEach(k => {
+      const x = d.tk[k]; if (!ID_RE.test(k) || !x || typeof x !== 'object') return;
+      if (x.x) { out.tk[k] = { x: 1, m: num(x.m) }; return; }
+      const dd = Math.round(num(x.d));
+      out.tk[k] = { n: str(x.n, 70), e: Math.min(730, Math.max(0, Math.round(num(x.e)))), d: dd >= -2 && dd <= 6 ? dd : -1, min: Math.min(240, Math.max(0, Math.round(num(x.min)))), w: x.w === 0 || x.w === 1 ? x.w : 2,
+        l: DATE_RE.test(x.l || '') ? x.l : today(), lw: x.lw === 0 || x.lw === 1 ? x.lw : -1, t: DATE_RE.test(x.t || '') ? x.t : '', af: ID_RE.test(x.af || '') ? x.af : '', q: str(x.q, 120), p: x.p ? 1 : 0, chk: x.chk ? 1 : 0, m: num(x.m) };
+    });
+    Object.keys(d.mu || {}).slice(0, 40).forEach(k => {
+      const x = d.mu[k]; if (!ID_RE.test(k) || !x || typeof x !== 'object') return;
+      if (x.x) { out.mu[k] = { x: 1, m: num(x.m) }; return; }
+      const ds = Array.isArray(x.d) ? Array.from(new Set(x.d.filter(v => typeof v === 'string' && DATE_RE.test(v)))).sort().slice(-400) : [];
+      out.mu[k] = { n: str(x.n, 30) || k, a: x.a ? 1 : 0, d: ds, dn: DATE_RE.test(x.dn || '') ? x.dn : '', m: num(x.m) };
+    });
+    const st = d.set && typeof d.set === 'object' ? d.set : {};
+    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), m: num(st.m) };
+    return out;
+  }
+  /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
+  const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
+
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  if (typeof module !== 'undefined') module.exports = root.HC;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* Haushalt: geteilte Einkaufsliste mit Laufweg pro Laden und Dauerartikeln. Gleicher Look wie Vorkoch. */
+(function () {
+  'use strict';
+  const H = window.HC;
+  const KEY = 'haushalt.v1';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const $ = id => document.getElementById(id);
+
+  /* ---------- Zustand ---------- */
+  let S;
+  function fresh() {
+    const now = Date.now();
+    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: 'all', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
+  }
+  function load() {
+    try {
+      const r = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (r && r.set) {
+        const d = H.cleanDoc({ v: 1, items: r.items, rec: r.rec, lrn: r.lrn, fav: r.fav, trips: r.trips, tk: r.tk, mu: r.mu, set: r.set });
+        const s = fresh();
+        s.items = d.items; s.rec = d.rec; s.lrn = d.lrn; s.fav = d.fav; s.trips = d.trips; s.tk = d.tk; s.set = d.set; s.mu = r.mu ? d.mu : H.seedMuell(); s.muMig = !!r.muMig; s.wMig = !!r.wMig;
+        if (!s.wMig) { if (!s.items.iwsack01) s.items.iwsack01 = fresh().items.iwsack01; s.wMig = true; }
+        if (!s.muMig) { ['Restmüll rausbringen', 'Biomüll rausbringen', 'Gelben Sack rausbringen', 'Papiertonne rausbringen'].forEach(n => { const id = H.taskId(n); if (s.tk[id] && !s.tk[id].x) s.tk[id] = { x: 1, m: Date.now() }; }); s.muMig = true; } s.tkSeed = !!r.tkSeed; s.tf = ['all', '0', '1'].includes(r.tf) ? r.tf : 'all';
+        if (!s.tkSeed) { s.tk = Object.assign(H.seedTasks(Date.now(), s.set.round), s.tk); s.tkSeed = true; }
+        s.me = r.me === 1 ? 1 : 0; s.tab = ['list', 'rec', 'tasks', 'hist', 'more'].includes(r.tab) ? r.tab : 'list'; s.store = H.SK.includes(r.store) ? r.store : 'dis';
+        if (r.sync && normUrl(r.sync.url) && /^[a-z0-9]{8,32}$/.test(r.sync.code || '')) s.sync = { url: normUrl(r.sync.url), code: r.sync.code, fresh: !!r.sync.fresh };
+        return s;
+      }
+    } catch (e) { /* neu starten */ }
+    return fresh();
+  }
+  const URL_RE = /^https:\/\/[a-z0-9-]+(-default-rtdb)?(\.[a-z0-9-]+)*\.(firebaseio\.com|firebasedatabase\.app)$/;
+  function normUrl(u) { u = String(u || '').trim().replace(/\/+$/, '').toLowerCase(); return URL_RE.test(u) ? u : ''; }
+  const doc = () => ({ v: 1, items: S.items, rec: S.rec, lrn: S.lrn, fav: S.fav, trips: S.trips, tk: S.tk, mu: S.mu, set: S.set });
+  function save(noSync) {
+    try { localStorage.setItem(KEY, JSON.stringify({ items: S.items, rec: S.rec, lrn: S.lrn, fav: S.fav, trips: S.trips, tk: S.tk, mu: S.mu, muMig: S.muMig, wMig: S.wMig, tkSeed: S.tkSeed, tf: S.tf, set: S.set, me: S.me, tab: S.tab, store: S.store, sync: S.sync })); } catch (e) { /* egal */ }
+    if (!noSync) schedSync();
+  }
+  S = load();
+  let sheet = null, ss = { state: '', msg: '' }, toastT = null;
+
+  /* ---------- Zugriffe ---------- */
+  const names = () => S.set.names;
+  const items = () => Object.keys(S.items).filter(k => !S.items[k].x).map(k => Object.assign({ id: k }, S.items[k]));
+  const recs = () => Object.keys(S.rec).filter(k => !S.rec[k].x).map(k => Object.assign({ id: k }, S.rec[k]));
+  const onList = rid => items().some(i => !i.d && i.r === rid);
+  const byName = (a, b) => a.n.localeCompare(b.n, 'de');
+  function putItem(id, o) { S.items[id] = Object.assign({}, S.items[id] || {}, o, { m: Date.now() }); }
+  function putRec(id, o) { S.rec[id] = Object.assign({}, S.rec[id] || {}, o, { m: Date.now() }); }
+  const kill = (map, id) => { map[id] = { x: 1, m: Date.now() }; };
+  const dueRecs = () => recs().filter(r => !r.p && H.due(r).left <= 0 && !onList(r.id));
+
+  /* ---------- Aktionen ---------- */
+  function toast(msg, undo) {
+    clearTimeout(toastT);
+    const el = $('toast'); if (!el) return;
+    el.innerHTML = '<span>' + esc(msg) + '</span>' + (undo ? '<button type="button" data-act="undo">Rückgängig</button>' : '');
+    el.hidden = false; toast.undo = undo || null;
+    toastT = setTimeout(() => { el.hidden = true; toast.undo = null; }, undo ? 6000 : 3200);
+  }
+  function addItem(text, forced) {
+    const n = String(text || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    if (!n) return;
+    const dup = items().find(i => !i.d && i.n.toLowerCase() === n.toLowerCase());
+    if (dup) { toast('„' + dup.n + '“ steht schon auf der Liste (' + H.SNAME[dup.s] + ')'); return; }
+    const fv = S.fav[n.toLowerCase().slice(0, 60)];
+    const g = forced ? { c: forced.c, s: forced.s } : fv && !fv.x ? { c: fv.c, s: fv.s } : H.guess(n, S.lrn), s = g.s || H.guessStore(g.c, S.store);
+    putItem(H.uid(), { n, s, c: g.c, q: '', b: S.me, d: 0, r: '' });
+    if (s !== S.store) toast('„' + n + '“ → ' + H.SNAME[s] + ' · ' + H.CNAME[g.c]);
+    save(); render();
+  }
+  function toggle(id) {
+    const it = S.items[id]; if (!it || it.x) return;
+    const now = !it.d;
+    putItem(id, { d: now ? 1 : 0 });
+    favBump(it, now ? 1 : -1);
+    if (now && it.r && S.rec[it.r] && !S.rec[it.r].x) {
+      const prev = S.rec[it.r].l, rid = it.r, r = S.rec[rid];
+      putRec(rid, { l: H.today() });
+      toast(r.n + ' gekauft · wieder ' + H.leftText(r.e), () => { putItem(id, { d: 0 }); favBump(S.items[id], -1); putRec(rid, { l: prev }); save(); render(); });
+    }
+    save(); render();
+  }
+  function closeTrip(st) {
+    const done = items().filter(i => i.d && i.s === st); if (!done.length) return;
+    const id = H.uid(), ids = done.map(i => i.id), snap = ids.map(k => Object.assign({}, S.items[k]));
+    S.trips[id] = { s: st, t: Date.now(), b: S.me, n: done.length, it: done.map(i => i.n).slice(0, 80), m: Date.now() };
+    ids.forEach(k => kill(S.items, k));
+    const left = items().filter(i => !i.d && i.s === st).length;
+    save(); render();
+    toast('Einkauf gespeichert · ' + done.length + (done.length === 1 ? ' Artikel' : ' Artikel') + (left ? ', ' + left + ' noch offen' : ''), () => { kill(S.trips, id); ids.forEach((k, j) => { S.items[k] = Object.assign({}, snap[j], { m: Date.now() }); }); save(); render(); });
+  }
+  /* Vergessenes Abhaken: Erledigtes, das älter als 2 Tage ist, wird als Einkauf verbucht (Zeitpunkt = letztes Abhaken). */
+  function autoClose() {
+    const lim = Date.now() - 2 * H.DAY, old = items().filter(i => i.d && i.m < lim); if (!old.length) return false;
+    H.SK.forEach(st => {
+      const g = old.filter(i => i.s === st); if (!g.length) return;
+      S.trips[H.uid()] = { s: st, t: Math.max.apply(null, g.map(i => i.m)), b: S.me, n: g.length, it: g.map(i => i.n).slice(0, 80), m: Date.now() };
+      g.forEach(i => kill(S.items, i.id));
+    });
+    return true;
+  }
+  /* ---------- Aufgaben ---------- */
+  const tasks = () => Object.keys(S.tk).filter(k => !S.tk[k].x).map(k => Object.assign({ id: k }, S.tk[k]));
+  const putTk = (id, o) => { S.tk[id] = Object.assign({}, S.tk[id] || {}, o, { m: Date.now() }); };
+  const whoTask = t => t.w === 2 ? (t.lw === 0 ? 1 : 0) : t.w;
+  function withInfo(t) { const nx = H.nextDue(t, S.set.round); return Object.assign(t, { next: nx, left: nx ? H.diffDays(nx, H.today()) : null }); }
+  const fmtMin = m => { m = Math.round(m); return m >= 60 ? Math.floor(m / 60) + ' Std ' + (m % 60 ? (m % 60) + ' Min' : '') : m + ' Min'; };
+  function doneTask(id) {
+    const t = S.tk[id]; if (!t || t.x) return;
+    const snap = JSON.parse(JSON.stringify(S.tk)), foll = tasks().filter(x => x.af === id);
+    putTk(id, { l: H.today(), lw: S.me, t: '' });
+    foll.forEach(x => putTk(x.id, { t: H.today() }));
+    save(); render();
+    toast(t.n + ' erledigt' + (foll.length ? ' · als Nächstes: ' + foll.map(x => x.n).slice(0, 2).join(', ') : ''), () => { Object.keys(snap).forEach(k => { S.tk[k] = Object.assign({}, snap[k], { m: Date.now() }); }); save(); render(); });
+  }
+  /* Müll: Tonnen, die heute oder morgen abgeholt werden und noch nicht abgehakt sind */
+  const mus = () => Object.keys(S.mu).filter(k => !S.mu[k].x).map(k => Object.assign({ id: k }, S.mu[k])).sort((a, b) => a.n.localeCompare(b.n, 'de'));
+  function muPending() {
+    const t0 = H.today();
+    return mus().filter(r => r.a).map(r => { const d = H.muNext(r, t0); return Object.assign({}, r, { next: d, left: d ? H.diffDays(d, t0) : 99 }); }).filter(r => r.left <= 1 && r.dn !== r.next);
+  }
+  const muDay = d => H.fmtDay(H.toDate(d).getTime());
+  function muRow(r) {
+    return '<div class="li"><button type="button" class="chk" data-act="mdone" data-id="' + r.id + '" aria-label="' + esc(r.n) + ' rausgestellt"><span class="box"></span></button><div class="lt"><b>' + esc(r.n) + ' rausstellen</b><small' + (r.left === 0 ? ' class="warnt"' : '') + '>' + (r.left === 0 ? 'Abholung heute früh · ' : 'Abholung morgen früh · ') + muDay(r.next) + '</small></div></div>';
+  }
+  const taskDue = f => tasks().map(withInfo).filter(t => t.left !== null && t.left <= 0 && (f === 'all' || whoTask(t) === Number(f)));
+  const tripsList = () => Object.keys(S.trips).filter(k => !S.trips[k].x).map(k => Object.assign({ id: k }, S.trips[k])).sort((a, b) => b.t - a.t);
+  function favBump(it, delta) {
+    const key = it.n.toLowerCase().slice(0, 60), old = S.fav[key];
+    S.fav[key] = { n: it.n, c: it.c, s: it.s, k: Math.max(0, ((old && !old.x ? old.k : 0) || 0) + delta), m: Date.now() };
+  }
+  const openNames = () => new Set(items().filter(i => !i.d).map(i => i.n.toLowerCase().slice(0, 60)));
+  function entryFor(key) { return H.known(S.fav).find(e => e.key === key); }
+  function toList(rid) {
+    const r = S.rec[rid]; if (!r || r.x || onList(rid)) return;
+    putItem(H.uid(), { n: r.n, s: r.s, c: r.c, q: '', b: S.me, d: 0, r: rid });
+  }
+  function purgeDone(st) {
+    let n = 0;
+    items().forEach(i => { if (i.d && i.s === st) { kill(S.items, i.id); n++; } });
+    return n;
+  }
+
+  /* ---------- Abgleich (Firebase Realtime Database über REST) ---------- */
+  const syncOn = () => !!(S.sync.url && S.sync.code);
+  function typing() { try { const a = document.activeElement; return !!a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && /^(text|number|date|search|url)$/.test(a.type || 'text'))); } catch (e) { return false; } }
+  function setSs(state, msg) { ss = { state, msg }; const el = $('syncbox'); if (el && !typing()) el.innerHTML = syncBox(); }
+  function jfetch(url, opt) {
+    const c = typeof AbortController === 'function' ? new AbortController() : null, t = setTimeout(() => { if (c) c.abort(); }, 12000);
+    return fetch(url, Object.assign({ signal: c ? c.signal : undefined, cache: 'no-store' }, opt)).then(r => {
+      clearTimeout(t);
+      if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'Zugriff verweigert. Die Regeln in Firebase brauchen den Eintrag „haushalt“ (siehe oben).' : 'Serverfehler ' + r.status);
+      return r.json();
+    }, () => { clearTimeout(t); throw new Error('Keine Verbindung.'); });
+  }
+  let syncing = false, again = false, syncTimer = null;
+  function schedSync() { if (!syncOn()) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 1200); }
+  async function syncNow() {
+    if (!syncOn()) return;
+    if (syncing) { again = true; return; }
+    syncing = true; setSs('busy', 'Gleiche ab …');
+    try {
+      const ep = S.sync.url + '/haushalt/' + S.sync.code + '.json';
+      const raw = await jfetch(ep);
+      const remote = raw === null ? null : H.unpack(raw);
+      if (raw !== null && !remote) throw new Error('Unbekanntes Datenformat unter diesem Code.');
+      const local = doc();
+      const result = !remote ? local : S.sync.fresh ? remote : H.merge(local, remote);
+      if (!H.same(result, local)) {
+        if (typing()) { again = true; syncing = false; setTimeout(syncNow, 4000); return; }
+        S.items = result.items; S.rec = result.rec; S.lrn = result.lrn; S.fav = result.fav; S.trips = result.trips; S.tk = result.tk; S.mu = result.mu; S.set = result.set;
+        render();
+      }
+      S.sync.fresh = false; save(true);
+      if (!remote || !H.same(result, remote)) await jfetch(ep, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result) });
+      setSs('ok', 'Abgeglichen um ' + new Date().toTimeString().slice(0, 5));
+      if (autoClose()) { save(); render(); }
+    } catch (err) { setSs('err', err && err.message ? err.message : 'Abgleich fehlgeschlagen.'); }
+    syncing = false;
+    if (again) { again = false; schedSync(); }
+  }
+  setInterval(() => { try { if (document.visibilityState !== 'hidden') syncNow(); } catch (e) { /* egal */ } }, 20000);
+  document.addEventListener('visibilitychange', () => { try { if (document.visibilityState === 'visible') { syncNow(); render(); } } catch (e) { /* egal */ } });
+  const b64e = o => { const s = btoa(unescape(encodeURIComponent(JSON.stringify(o)))); return s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const b64d = t => { try { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; return JSON.parse(decodeURIComponent(escape(atob(t)))); } catch (e) { return null; } };
+  function inviteLink() { return location.href.split('#')[0] + '#j=' + b64e({ u: S.sync.url, c: S.sync.code }); }
+  function checkHash() {
+    let h = ''; try { h = location.hash; } catch (e) { return; }
+    const m = /^#j=([A-Za-z0-9_-]+)$/.exec(h); if (!m) return;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ }
+    const d = b64d(m[1]);
+    if (d && normUrl(d.u) && /^[a-z0-9]{8,32}$/.test(d.c || '')) { sheet = { t: 'join', u: normUrl(d.u), c: d.c }; S.tab = 'more'; }
+  }
+  function newCode() { const cs = 'abcdefghijkmnpqrstuvwxyz23456789'; let o = ''; try { const a = new Uint8Array(14); crypto.getRandomValues(a); a.forEach(x => { o += cs[x % cs.length]; }); } catch (e) { for (let i = 0; i < 14; i++) o += cs[Math.floor(Math.random() * cs.length)]; } return o; }
+  function vorkochUrl() { try { const v = JSON.parse(localStorage.getItem('vorkoch.v1') || 'null'); return v && v.sync && normUrl(v.sync.url) || ''; } catch (e) { return ''; } }
+
+  /* ---------- Ansichten ---------- */
+  function storeSeg() {
+    const open = items().filter(i => !i.d);
+    return '<div class="seg" role="group" aria-label="Laden">' + H.STORES.map(([k, l]) => '<button type="button" data-act="store" data-s="' + k + '" aria-pressed="' + (S.store === k) + '">' + esc(l) + '<i>' + open.filter(i => i.s === k).length + '</i></button>').join('') + '</div>';
+  }
+  function itemRow(i) {
+    const sub = [i.q, i.b !== S.me ? 'von ' + names()[i.b] : '', i.r ? 'Dauerartikel' : ''].filter(Boolean).join(' · ');
+    return '<div class="li' + (i.d ? ' done' : '') + '"><button type="button" class="chk" data-act="tog" data-id="' + i.id + '" aria-label="' + esc(i.n) + (i.d ? ' wieder auf die Liste' : ' abhaken') + '"><span class="box"></span></button>' +
+      '<button type="button" class="lt" data-act="edit" data-id="' + i.id + '"><b>' + esc(i.n) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</button></div>';
+  }
+  const subText = (all, open) => open.length ? open.length + ' offen, ' + all.filter(i => i.d).length + ' erledigt' : 'Nichts offen';
+  function viewList() {
+    const all = items(), open = all.filter(i => !i.d), st = S.store;
+    let h = '<h1 class="ltitle">Einkaufsliste</h1><p class="lsub" id="lsub">' + subText(all, open) + '</p>';
+    h += '<form class="addf" data-form="add" autocomplete="off"><input type="text" id="addin" placeholder="Was wird gebraucht?" aria-label="Neuer Artikel" enterkeyhint="done" autocapitalize="sentences" autocorrect="off" spellcheck="false"><button class="btn" type="submit" aria-label="Hinzufügen">+</button></form><div id="sugg" class="chips" hidden></div>';
+    return h + '<div id="lbody">' + listBody(all, open, st) + '</div>';
+  }
+  function listBody(all, open, st) {
+    let h = '';
+    const d = dueRecs();
+    if (d.length) h += '<div class="note due"><b>' + d.length + (d.length === 1 ? ' Dauerartikel ist fällig' : ' Dauerartikel sind fällig') + '</b><span>' + esc(d.slice(0, 4).map(r => r.n).join(', ') + (d.length > 4 ? ' und ' + (d.length - 4) + ' weitere' : '')) + '</span><button type="button" class="btn sm" data-act="dueall">Alle auf die Liste</button></div>';
+    h += storeSeg() + '<p class="foot" style="margin:8px 2px 0">' + esc(H.STORES.find(s => s[0] === st)[2]) + ', sortiert nach Laufweg</p>';
+    const on = openNames(), favs = Object.keys(S.fav).map(k => Object.assign({ key: k }, S.fav[k])).filter(f => !f.x && f.k > 0 && f.s === st && !on.has(f.key)).sort((a, b) => b.k - a.k || a.n.localeCompare(b.n, 'de')).slice(0, 8);
+    h += '<p class="cap">Schnell hinzufügen</p><div class="chips">' + favs.map(f => '<button type="button" class="chip q" data-act="qadd" data-k="' + esc(f.key) + '">+ ' + esc(f.n) + '</button>').join('') + '<button type="button" class="chip q alt" data-act="pick">Alle Artikel …</button></div>';
+    if (!favs.length) h += '<p class="foot" style="margin:6px 2px 0">Was ihr abhakt, erscheint hier als Vorschlag.</p>';
+    const mine = open.filter(i => i.s === st);
+    if (!mine.length) h += '<div class="empty">Hier ist nichts offen.<br>Oben etwas eintippen, es landet im passenden Laden.</div>';
+    S.set.route[st].forEach(c => {
+      const l = mine.filter(i => i.c === c).sort(byName);
+      if (l.length) h += '<p class="cap">' + esc(H.CNAME[c]) + '</p><div class="grp">' + l.map(itemRow).join('') + '</div>';
+    });
+    const done = all.filter(i => i.d && i.s === st).sort(byName);
+    if (done.length) h += '<p class="cap">Erledigt · ' + done.length + '</p><div class="grp">' + done.map(itemRow).join('') + '</div><div class="actions" style="margin-bottom:6px"><button type="button" class="btn" data-act="finish">Einkauf abschließen · ' + done.length + '</button></div><p class="foot" style="margin-top:0">Speichert den Einkauf im Verlauf und leert die erledigten Artikel. Was noch offen ist, bleibt stehen. <button type="button" class="lnk" data-act="clear" style="padding:0;min-height:0;font-size:13px">Nur entfernen, ohne Verlauf</button></p>';
+    return h;
+  }
+  function recRow(r, mode) {
+    const d = H.due(r), sub = H.everyText(r.e) + ' · ' + H.SNAME[r.s];
+    const right = mode === 'due' ? '<button type="button" class="btn sm soft" data-act="rlist" data-id="' + r.id + '">Auf die Liste</button>' : mode === 'on' ? '<span class="chip">steht drauf</span>' : '';
+    const when = r.p ? 'pausiert' : H.leftText(d.left);
+    return '<div class="li padl"><button type="button" class="lt" data-act="redit" data-id="' + r.id + '"><b>' + esc(r.n) + '</b><small' + (!r.p && d.left <= 0 && mode !== 'on' ? ' class="warnt"' : '') + '>' + esc(when) + ' · ' + esc(sub) + '</small></button>' + right + '</div>';
+  }
+  function taskRow(t) {
+    const who = t.w === 2 ? 'dran: ' + names()[whoTask(t)] : names()[t.w];
+    const pred = t.af && S.tk[t.af] && !S.tk[t.af].x ? S.tk[t.af].n : '';
+    const st = t.left === null ? (t.p ? 'pausiert' : pred ? 'wartet auf „' + pred + '“' : '') : t.left < 0 ? (t.left === -1 ? 'seit gestern fällig' : 'seit ' + (-t.left) + ' Tagen fällig') : pred && t.left === 0 ? 'nach „' + pred + '“' : '';
+    const sub = [who, t.min ? t.min + ' Min' : '', st].filter(Boolean).join(' · ');
+    return '<div class="li"><button type="button" class="chk" data-act="tdone" data-id="' + t.id + '" aria-label="' + esc(t.n) + ' erledigt"><span class="box"></span></button><button type="button" class="lt" data-act="tedit" data-id="' + t.id + '"><b>' + esc(t.n) + '</b><small' + (t.left !== null && t.left < 0 ? ' class="warnt"' : '') + '>' + esc(sub) + '</small></button></div>';
+  }
+  function viewTasks() {
+    const f = S.tf, t0 = H.today(), all = tasks().map(withInfo), mine = t => f === 'all' || whoTask(t) === Number(f);
+    const by = (a, b) => (a.left - b.left) || (H.ordIdx(a.n) - H.ordIdx(b.n)) || a.n.localeCompare(b.n, 'de');
+    const heute = all.filter(t => t.left !== null && t.left <= 0 && mine(t)).sort(by);
+    const woche = all.filter(t => t.left !== null && t.left > 0 && t.left <= 7 && mine(t)).sort(by);
+    const spaeter = all.filter(t => t.left !== null && t.left > 7 && mine(t)).sort(by);
+    const wartet = all.filter(t => t.left === null && !t.p && mine(t)).sort((a, b) => a.n.localeCompare(b.n, 'de'));
+    const pause = all.filter(t => t.p).sort((a, b) => a.n.localeCompare(b.n, 'de'));
+    const sumMin = l => l.reduce((a, t) => a + (t.min || 0), 0);
+    let h = '<h1 class="ltitle">Aufgaben</h1><p class="lsub">' + esc(H.fmtDay(Date.now())) + ' · ' + (heute.length ? heute.length + ' fällig, ca. ' + fmtMin(sumMin(heute)) : 'heute nichts fällig') + '</p>';
+    h += '<div class="seg" role="group" aria-label="Wessen Aufgaben">' + [['all', 'Alle'], ['0', names()[0]], ['1', names()[1]]].map(([v, l]) => '<button type="button" data-act="tf" data-v="' + v + '" aria-pressed="' + (f === v) + '">' + esc(l) + '</button>').join('') + '</div>';
+    const mp = muPending();
+    if (mp.length) h += '<p class="cap">Müll · ' + mp.length + '</p><div class="grp">' + mp.map(muRow).join('') + '</div>';
+    if (all.some(t => t.chk)) h += '<div class="note due" style="margin-top:12px"><b>Müll-Termine prüfen</b><span>Rhythmus und Wochentag der Müllaufgaben sind Platzhalter. Gleicht sie mit eurem Müllkalender ab (Aufgabe antippen).</span><button type="button" class="btn sm" data-act="chkok">Passt so</button></div>';
+    const sec = (title, l, extra) => l.length ? '<p class="cap">' + title + '</p><div class="grp">' + l.map(taskRow).join('') + '</div>' : '';
+    h += sec('Heute · ' + heute.length + ' · ca. ' + fmtMin(sumMin(heute)), heute);
+    if (!heute.length) h += '<div class="empty">Heute ist nichts fällig.</div>';
+    const days = []; woche.forEach(t => { if (!days.includes(t.next)) days.push(t.next); });
+    days.forEach(d => {
+      const g = woche.filter(t => t.next === d), rnd = H.toDate(d).getDay() === S.set.round && g.length > 2;
+      h += '<p class="cap">' + esc(H.fmtDay(H.toDate(d).getTime())) + (rnd ? ' · Haushaltsrunde' : '') + ' · ' + g.length + ' · ca. ' + fmtMin(sumMin(g)) + '</p><div class="grp">' + g.map(taskRow).join('') + '</div>' + (rnd ? '<p class="foot">Reihenfolge mit Absicht: Wäsche zuerst, Reiniger früh einsprühen, Böden zuletzt.</p>' : '');
+    });
+    const mn = mus().map(r => { const d = H.muNext(r, t0); return Object.assign({}, r, { next: d }); }).filter(r => r.next).sort((a, b) => a.next.localeCompare(b.next));
+    if (mn.length) h += '<p class="cap">Nächste Müllabholung</p><div class="grp">' + mn.map(r => { const l = H.diffDays(r.next, t0); return '<div class="li padl"><div class="lt"><b>' + esc(r.n) + '</b><small>' + muDay(r.next) + ' · ' + (l === 0 ? 'heute' : l === 1 ? 'morgen' : 'in ' + l + ' Tagen') + '</small></div></div>'; }).join('') + '</div>';
+    if (spaeter.length) h += '<p class="cap">Später · ' + spaeter.length + '</p><div class="grp">' + spaeter.map(t => '<div class="li padl"><button type="button" class="lt" data-act="tedit" data-id="' + t.id + '"><b>' + esc(t.n) + '</b><small>' + esc(H.fmtDay(H.toDate(t.next).getTime())) + ' · ' + esc(t.w === 2 ? 'abwechselnd' : names()[t.w]) + ' · ' + esc(H.everyText(t.e)) + '</small></button></div>').join('') + '</div>';
+    if (wartet.length) h += '<p class="cap">Wird ausgelöst · ' + wartet.length + '</p><div class="grp">' + wartet.map(t => '<div class="li padl"><button type="button" class="lt" data-act="tedit" data-id="' + t.id + '"><b>' + esc(t.n) + '</b><small>' + esc(S.tk[t.af] && !S.tk[t.af].x ? 'nach „' + S.tk[t.af].n + '“' : '') + '</small></button></div>').join('') + '</div>';
+    if (pause.length) h += '<p class="cap">Pausiert · ' + pause.length + '</p><div class="grp">' + pause.map(t => '<div class="li padl"><button type="button" class="lt" data-act="tedit" data-id="' + t.id + '"><b>' + esc(t.n) + '</b></button></div>').join('') + '</div>';
+    // Verteilung
+    const wk = H.weekly(all), mx = Math.max(1, wk[0], wk[1]);
+    h += '<p class="cap">Verteilung pro Woche (Schätzung)</p><div class="grp"><div class="pad">' + wk.map((m, i) => '<div class="dist"><span>' + esc(names()[i]) + '</span><div class="dbar"><i style="width:' + Math.round(m / mx * 100) + '%"></i></div><b>' + fmtMin(m) + '</b></div>').join('') +
+      '<p class="foot" style="margin:8px 0 0">Aus Dauer und Rhythmus der Aufgaben gerechnet. Abwechselnde Aufgaben zählen je zur Hälfte. Gerecht heißt nicht gleich, aber ihr seht, wo es kippt.</p></div></div>';
+    h += '<div class="actions"><button type="button" class="btn gray" data-act="tnew">Neue Aufgabe</button><button type="button" class="btn gray" data-act="cattk">Aus dem Katalog</button><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>';
+    return h;
+  }
+  function viewHist() {
+    const ts = tripsList();
+    let h = '<h1 class="ltitle">Verlauf</h1><p class="lsub">Abgeschlossene Einkäufe, nach Woche sortiert.</p>';
+    if (!ts.length) return h + '<div class="empty">Noch kein Einkauf abgeschlossen.<br>Auf der Liste Artikel abhaken, dann „Einkauf abschließen“ tippen.</div>';
+    const now = Date.now(), w0 = H.monday(now), cur = ts.filter(x => H.monday(x.t) === w0), l4 = ts.filter(x => x.t >= now - 28 * H.DAY);
+    const sum = l => l.reduce((a, x) => a + x.n, 0);
+    h += '<div class="stats">' +
+      '<div class="stat"><small>Diese Woche</small><b>' + cur.length + (cur.length === 1 ? ' Einkauf' : ' Einkäufe') + '</b><small>' + sum(cur) + ' Artikel</small></div>' +
+      '<div class="stat"><small>Letzte 4 Wochen</small><b>' + l4.length + (l4.length === 1 ? ' Einkauf' : ' Einkäufe') + '</b><small>' + sum(l4) + ' Artikel</small></div>' +
+      '<div class="stat"><small>Zuletzt</small><b>' + esc(H.fmtDay(ts[0].t)) + '</b><small>' + esc(H.SNAME[ts[0].s]) + '</small></div>' +
+      '<div class="stat"><small>Pro Einkauf</small><b>' + (l4.length ? Math.round(sum(l4) / l4.length) : 0) + ' Artikel</b><small>letzte 4 Wochen</small></div></div>';
+    // Balken: Artikel je Woche, letzte 8 Wochen
+    const wk = []; for (let i = 7; i >= 0; i--) wk.push(H.addDays(w0, -7 * i));
+    const per = wk.map(m => ts.filter(x => H.monday(x.t) === m)), mx = Math.max(1, ...per.map(sum));
+    h += '<p class="cap">Artikel pro Woche</p><div class="grp"><div class="pad"><div class="bars" role="img" aria-label="Artikel pro Woche, letzte 8 Wochen">' + wk.map((m, i) => '<div class="bc"><span class="bv">' + (sum(per[i]) || '') + '</span><i style="height:' + Math.round(sum(per[i]) / mx * 70) + 'px"></i><span class="bl">' + H.kw(m) + '</span></div>').join('') + '</div><p class="foot" style="margin:6px 0 0">Zahlen unten sind Kalenderwochen.</p></div></div>';
+    // üblicher Tag je Laden
+    const usual = [];
+    H.STORES.forEach(([k, l]) => {
+      const g = ts.filter(x => x.s === k && x.t >= now - 84 * H.DAY); if (g.length < 2) return;
+      const c = [0, 0, 0, 0, 0, 0, 0]; g.forEach(x => { c[new Date(x.t).getDay()]++; });
+      const d = c.indexOf(Math.max.apply(null, c));
+      usual.push('<div class="row"><span class="grow"><b>' + esc(l) + '</b></span><span class="val">meist ' + H.WDL[d] + ' (' + c[d] + ' von ' + g.length + ')</span></div>');
+    });
+    if (usual.length) h += '<p class="cap">Wann ihr einkauft</p><div class="grp">' + usual.join('') + '</div>';
+    // Wochen
+    const keys = []; ts.forEach(x => { const m = H.monday(x.t); if (!keys.includes(m)) keys.push(m); });
+    keys.slice(0, 12).forEach(m => {
+      const g = ts.filter(x => H.monday(x.t) === m);
+      h += '<p class="cap">KW ' + H.kw(m) + ' · ' + H.fmtRange(m) + ' · ' + g.length + (g.length === 1 ? ' Einkauf' : ' Einkäufe') + '</p><div class="grp">' + g.map(x =>
+        '<div class="li padl"><button type="button" class="lt" data-act="tview" data-id="' + x.id + '"><b>' + esc(H.fmtDay(x.t)) + ', ' + esc(H.fmtTime(x.t)) + ' · ' + esc(H.SNAME[x.s]) + '</b><small>' + x.n + (x.n === 1 ? ' Artikel' : ' Artikel') + ' · ' + esc(names()[x.b]) + '</small></button></div>').join('') + '</div>';
+    });
+    return h;
+  }
+  function viewRec() {
+    const rs = recs().sort((a, b) => H.due(a).left - H.due(b).left || byName(a, b));
+    const live = rs.filter(r => !r.p);
+    const g = { due: [], on: [], soon: [], later: [] };
+    live.forEach(r => { const l = H.due(r).left; if (onList(r.id)) g.on.push(r); else if (l <= 0) g.due.push(r); else if (l <= 14) g.soon.push(r); else g.later.push(r); });
+    let h = '<h1 class="ltitle">Dauerartikel</h1><p class="lsub">Verbrauchsgüter, die sich im Turnus von selbst melden. Beim Abhaken startet der Turnus neu.</p>';
+    const sec = (t, l, mode) => l.length ? '<p class="cap">' + t + ' · ' + l.length + '</p><div class="grp">' + l.map(r => recRow(r, mode)).join('') + '</div>' : '';
+    if (g.due.length) h += '<div class="actions" style="margin-top:0"><button type="button" class="btn" data-act="dueall">Alle ' + g.due.length + ' fälligen auf die Liste</button></div>';
+    h += sec('Fällig', g.due, 'due') + sec('Steht auf der Liste', g.on, 'on') + sec('In den nächsten 2 Wochen', g.soon, '') + sec('Später', g.later, '') + sec('Pausiert', rs.filter(r => r.p), '');
+    if (!rs.length) h += '<div class="empty">Noch keine Dauerartikel.</div>';
+    h += '<div class="actions"><button type="button" class="btn gray" data-act="rnew">Neuer Dauerartikel</button><button type="button" class="btn gray" data-act="catrec">Aus dem Katalog</button><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>';
+    h += '<p class="foot">Die Startwerte sind geschätzt (Zwei-Personen-Haushalt). Tippe auf einen Artikel, um Turnus oder „zuletzt gekauft“ anzupassen.</p>';
+    return h;
+  }
+  function syncBox() {
+    if (!syncOn()) {
+      const pre = vorkochUrl();
+      return '<ol class="mini"><li>Firebase öffnen (dasselbe Projekt wie bei Vorkoch), Realtime Database, Reiter „Regeln“.</li><li>Dort diese Regeln einfügen und veröffentlichen: <code>{ "rules": { "vorkoch": { "$code": { ".read": true, ".write": true } }, "haushalt": { "$code": { ".read": true, ".write": true } } } }</code></li><li>Die Datenbank-Adresse hier eintragen (dieselbe wie bei Vorkoch).</li></ol>' +
+        '<div class="flex" style="margin-top:12px"><input type="url" id="syncurl" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://…firebasedatabase.app" aria-label="Datenbank-Adresse" value="' + esc(pre) + '"><button type="button" class="btn sm" data-act="connect">Verbinden</button></div>' +
+        (ss.state === 'err' ? '<p class="alert">' + esc(ss.msg) + '</p>' : '');
+    }
+    return '<p class="' + (ss.state === 'err' ? 'alert' : 'sub') + '" style="margin-bottom:10px">' + esc(ss.msg || 'Verbunden.') + '</p>' +
+      '<div class="actions" style="margin:0"><button type="button" class="btn sm soft" data-act="syncnow">Jetzt abgleichen</button><button type="button" class="btn sm gray" data-act="unlink">Trennen</button></div>' +
+      '<p class="foot" style="margin:12px 0 6px">Einladungslink für die andere Person. Einmal öffnen genügt.</p><div class="cp"><input type="text" id="invite" readonly value="' + esc(inviteLink()) + '" aria-label="Einladungslink"><button type="button" class="btn sm" data-act="copy">Kopieren</button></div>';
+  }
+  function viewMore() {
+    let h = '<h1 class="ltitle">Mehr</h1><p class="lsub">Einstellungen für euch beide.</p>';
+    h += '<p class="cap">Wer bist du auf diesem Gerät?</p><div class="grp"><div class="pad"><div class="seg" role="group">' + names().map((n, i) => '<button type="button" data-act="me" data-i="' + i + '" aria-pressed="' + (S.me === i) + '">' + esc(n) + '</button>').join('') + '</div></div>' +
+      names().map((n, i) => '<div class="frow"><label for="nm' + i + '">Name ' + (i + 1) + '</label><input type="text" id="nm' + i + '" data-name="' + i + '" value="' + esc(n) + '" maxlength="20" autocapitalize="words"></div>').join('') + '</div>';
+    h += '<p class="foot">Damit steht bei Artikeln, wer sie auf die Liste gesetzt hat.</p>';
+    h += '<p class="cap">Haushaltsrunde</p><div class="grp"><div class="frow"><label for="roundsel">Tag der Runde</label><select id="roundsel">' + [1, 2, 3, 4, 5, 6, 0].map(i => '<option value="' + i + '"' + (S.set.round === i ? ' selected' : '') + '>' + H.WDL[i] + '</option>').join('') + '</select></div></div><p class="foot">An diesem Tag werden Putzen, Wäsche und alles andere gebündelt, damit der Rest der Woche frei bleibt. Aufgaben mit „Haushaltsrunde“ folgen dem Tag automatisch.</p>';
+    h += '<p class="cap">Abgleich zwischen den Geräten</p><div class="grp"><div class="pad" id="syncbox">' + syncBox() + '</div></div>';
+    const t0 = H.today(), ml = mus(), lastA = ml.filter(r => r.a).map(r => r.d[r.d.length - 1] || '').sort().pop() || '';
+    h += '<p class="cap">Weitere Apps</p><div class="grp"><a class="row chev" style="text-decoration:none;color:inherit" href="https://aiaccount42.github.io/vorkoch/" target="_blank" rel="noopener"><span class="grow"><b>Vorkoch öffnen</b><br><span class="sub">Essensplan und Meal-Prep</span></span></a></div>';
+    h += '<p class="cap">Haushalt-Wissen</p><div class="grp"><button type="button" class="row chev" data-act="wiki"><span class="grow"><b>Kleines Wiki</b><br><span class="sub">Wäsche, Putzen, Bügeln, Routinen: so geht es mit wenig Zeit</span></span></button></div>';
+    h += '<p class="cap">Müllkalender</p><div class="grp">' + ml.map(r => { const fut = r.d.filter(d => d >= t0).length; return '<div class="frow"><label>' + esc(r.n) + '</label><span class="sub">' + fut + ' Termine' + (r.d.length ? ' bis ' + esc(r.d[r.d.length - 1].split('-').reverse().join('.')) : '') + '</span></div>'; }).join('') +
+      '<div class="pad"><button type="button" class="btn gray sm" data-act="muimp">Kalender importieren (.ics)</button><input type="file" id="mufile" accept=".ics,text/calendar" hidden></div></div>';
+    h += '<p class="foot">' + (!lastA || H.diffDays(lastA, t0) < 45 ? '<b>Der Kalender läuft bald aus.</b> ' : '') + 'Am Vorabend der Abholung erscheint die Tonne unter Aufgaben. Neue Jahre einfach importieren: Termine im Zeitraum der Datei werden ersetzt, ältere bleiben.</p>';
+    h += '<p class="cap">Laufweg im Laden</p><div class="foot" style="margin:0 16px 8px">Die Reihenfolge ist ein üblicher Aufbau (Eingang zuerst). Jede Filiale ist anders: Schiebe die Gruppen so, wie ihr durch euren Laden lauft.</div>';
+    H.STORES.forEach(([k, l, long]) => {
+      const op = !!S.open[k];
+      h += '<div class="grp" style="margin-bottom:10px"><button type="button" class="row chev" data-act="ropen" data-s="' + k + '" aria-expanded="' + op + '"><span class="grow"><b>' + esc(l) + '</b><br><span class="sub">' + esc(long) + '</span></span></button>';
+      if (op) {
+        S.set.route[k].forEach((c, i, a) => { h += '<div class="rt"><span>' + (i + 1) + '. ' + esc(H.CNAME[c]) + '</span><button type="button" data-act="rup" data-s="' + k + '" data-i="' + i + '" aria-label="Nach oben"' + (i === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-act="rdn" data-s="' + k + '" data-i="' + i + '" aria-label="Nach unten"' + (i === a.length - 1 ? ' disabled' : '') + '>▼</button></div>'; });
+        h += '<div class="pad"><button type="button" class="btn gray sm" data-act="rreset" data-s="' + k + '">Standard wiederherstellen</button></div>';
+      }
+      h += '</div>';
+    });
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 7</p>';
+    return h;
+  }
+
+  /* ---------- Dialoge ---------- */
+  const catOpts = cur => H.CATS.map(([k, l]) => '<option value="' + k + '"' + (cur === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('');
+  const storeSegH = (cur, act) => '<div class="seg" role="group">' + H.STORES.map(([k, l]) => '<button type="button" data-act="' + act + '" data-s="' + k + '" aria-pressed="' + (cur === k) + '">' + esc(l) + '</button>').join('') + '</div>';
+  const shell = (title, body, foot) => '<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="shd"><span class="grab"></span><h3>' + esc(title) + '</h3><button type="button" class="btn sm soft" data-act="done">Fertig</button></div><div class="shb">' + body + (foot || '') + '</div></div>';
+  function sheetHtml() {
+    if (!sheet) return '';
+    if (sheet.t === 'item') {
+      const d = sheet.d;
+      return shell('Artikel', '<div class="grp"><div class="frow col"><input type="text" id="f_n" value="' + esc(d.n) + '" maxlength="80" aria-label="Name"></div><div class="frow col"><input type="text" id="f_q" value="' + esc(d.q) + '" maxlength="120" placeholder="Menge oder Notiz, zum Beispiel 2 Stück" aria-label="Notiz"></div></div>' +
+        '<p class="cap">Laden</p>' + storeSegH(d.s, 'fs') + '<p class="cap">Abteilung</p><div class="grp"><div class="frow"><label for="f_c">Abteilung</label><select id="f_c">' + catOpts(d.c) + '</select></div></div>',
+        '<div class="actions">' + (d.r ? '' : '<button type="button" class="btn soft" data-act="mkrec">Als Dauerartikel anlegen</button>') + '<button type="button" class="btn danger" data-act="idel">Löschen</button></div>');
+    }
+    if (sheet.t === 'rec') {
+      const d = sheet.d;
+      return shell(sheet.id ? 'Dauerartikel' : 'Neuer Dauerartikel', '<div class="grp"><div class="frow col"><input type="text" id="r_n" value="' + esc(d.n) + '" maxlength="60" placeholder="Name, zum Beispiel Toilettenpapier" aria-label="Name"></div></div>' +
+        '<p class="cap">Laden</p>' + storeSegH(d.s, 'rs') + '<p class="cap">Abteilung und Turnus</p><div class="grp"><div class="frow"><label for="r_c">Abteilung</label><select id="r_c">' + catOpts(d.c) + '</select></div>' +
+        '<div class="frow"><span class="lb">Alle</span><span class="two"><input type="number" id="r_k" inputmode="numeric" min="1" max="99" value="' + esc(d.k) + '" aria-label="Anzahl"><select id="r_u" aria-label="Einheit">' + [['1', 'Tage'], ['7', 'Wochen'], ['30', 'Monate']].map(([v, l]) => '<option value="' + v + '"' + (d.u === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></span></div>' +
+        '<div class="frow"><label for="r_l">Zuletzt gekauft</label><input type="date" id="r_l" value="' + esc(d.l) + '" max="' + H.today() + '"></div>' +
+        '<div class="frow"><span class="lb">Pausiert</span><label class="sw"><input type="checkbox" id="r_p"' + (d.p ? ' checked' : '') + ' aria-label="Pausiert"><i></i></label></div></div>' +
+        '<p class="foot">Fällig wird er, wenn seit dem letzten Kauf der Turnus um ist. Pausiert heißt: keine Erinnerung.</p>',
+        '<div class="actions">' + (sheet.id ? '<button type="button" class="btn soft" data-act="rbought">Gerade gekauft</button><button type="button" class="btn danger" data-act="rdel">Löschen</button>' : '') + '</div>');
+    }
+    if (sheet.t === 'task') {
+      const d = sheet.d, others = tasks().filter(x => x.id !== sheet.id).sort((a, b) => a.n.localeCompare(b.n, 'de'));
+      const wdOpts = [['-1', 'Beliebig'], ['-2', 'Haushaltsrunde (' + H.WDL[S.set.round] + ')'], ['1', 'Montag'], ['2', 'Dienstag'], ['3', 'Mittwoch'], ['4', 'Donnerstag'], ['5', 'Freitag'], ['6', 'Samstag'], ['0', 'Sonntag']];
+      return shell(sheet.id ? 'Aufgabe' : 'Neue Aufgabe', '<div class="grp"><div class="frow col"><input type="text" id="t_n" value="' + esc(d.n) + '" maxlength="70" placeholder="Name, zum Beispiel Bad putzen" aria-label="Name"></div></div>' +
+        '<p class="cap">Zuständig</p><div class="seg" role="group">' + [[0, names()[0]], [1, names()[1]], [2, 'Abwechselnd']].map(([v, l]) => '<button type="button" data-act="tw" data-v="' + v + '" aria-pressed="' + (d.w === v) + '">' + esc(l) + '</button>').join('') + '</div>' +
+        '<p class="cap">Wann</p><div class="grp"><div class="frow"><label for="t_af">Kommt nach</label><select id="t_af"><option value="">Eigener Rhythmus</option>' + others.map(x => '<option value="' + x.id + '"' + (d.af === x.id ? ' selected' : '') + '>' + esc(x.n) + '</option>').join('') + '</select></div>' +
+        (d.af ? '' : '<div class="frow"><span class="lb">Alle</span><span class="two"><input type="number" id="t_k" inputmode="numeric" min="1" max="99" value="' + esc(d.k) + '" aria-label="Anzahl"><select id="t_u" aria-label="Einheit">' + [['1', 'Tage'], ['7', 'Wochen'], ['30', 'Monate']].map(([v, l]) => '<option value="' + v + '"' + (d.u === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></span></div>' +
+          '<div class="frow"><label for="t_d">Am</label><select id="t_d">' + wdOpts.map(([v, l]) => '<option value="' + v + '"' + (d.d === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></div>' +
+          '<div class="frow"><label for="t_l">Zuletzt erledigt</label><input type="date" id="t_l" value="' + esc(d.l) + '" max="' + H.today() + '"></div>') + '</div>' +
+        '<p class="foot">' + (d.af ? 'Wird fällig, sobald die andere Aufgabe erledigt ist.' : 'Feste Wochentage gelten bei Rhythmen in ganzen Wochen.') + '</p>' +
+        (sheet.id && H.TIPS[d.n] ? '<p class="cap">So geht es am schnellsten</p><div class="note" style="margin-top:0">' + esc(H.TIPS[d.n]) + '</div>' : '') +
+        '<p class="cap">Dauer und Standard</p><div class="grp"><div class="frow"><label for="t_m">Dauer in Minuten</label><input type="number" id="t_m" inputmode="numeric" min="0" max="240" value="' + esc(d.min) + '"></div><div class="frow col"><input type="text" id="t_q" value="' + esc(d.q) + '" maxlength="120" placeholder="Wann ist es gut genug? (Mindeststandard)" aria-label="Mindeststandard"></div>' +
+        '<div class="frow"><span class="lb">Pausiert</span><label class="sw"><input type="checkbox" id="t_p"' + (d.p ? ' checked' : '') + ' aria-label="Pausiert"><i></i></label></div></div>',
+        '<div class="actions">' + (sheet.id ? '<button type="button" class="btn soft" data-act="tnow">Jetzt erledigt</button><button type="button" class="btn danger" data-act="tdelt">Löschen</button>' : '') + '</div>');
+    }
+    if (sheet.t === 'cat') {
+      const isT = sheet.k === 'tk', list = isT ? H.CAT_TK : H.CAT_REC, have = new Set((isT ? tasks() : recs()).map(x => x.n.toLowerCase()));
+      return shell(isT ? 'Aufgaben-Katalog' : 'Verbrauchs-Katalog', '<p class="foot" style="margin:0 2px 10px">Richtwerte aus gängigen Empfehlungen. Nach dem Hinzufügen kannst du Rhythmus und Details ändern.</p><div class="grp">' + list.map((x, i) => {
+        const n = x[0], e = isT ? x[1] : x[3], why = isT ? x[3] : x[4], has = have.has(n.toLowerCase());
+        return '<div class="li padl"><div class="lt"><b>' + esc(n) + '</b><small>' + esc(H.everyText(e)) + (why ? ' · ' + esc(why) : '') + '</small></div>' + (has ? '<span class="sub" style="padding-right:14px">dabei</span>' : '<button type="button" class="btn sm soft" style="margin-right:12px" data-act="catadd" data-i="' + i + '">Hinzufügen</button>') + '</div>';
+      }).join('') + '</div>', '');
+    }
+    if (sheet.t === 'plan') {
+      const t0 = H.today(), who = i => i === 0 || i === 1 ? ' (' + names()[i] + ')' : '';
+      const ts = tasks().map(withInfo).filter(t => t.e).sort((a, b) => (a.next || '9').localeCompare(b.next || '9') || a.n.localeCompare(b.n, 'de'));
+      const rs = recs().filter(r => !r.p).map(r => Object.assign({}, r, { nx: H.due(r) })).sort((a, b) => a.nx.next.localeCompare(b.nx.next) || a.n.localeCompare(b.n, 'de'));
+      const row = (n, sub) => '<div class="li padl"><div class="lt"><b>' + esc(n) + '</b><small>' + esc(sub) + '</small></div></div>';
+      return shell('Übersicht', '<p class="cap" style="margin-top:0">Aufgaben · wann was dran ist</p><div class="grp">' + ts.map(t => row(t.n, H.everyText(t.e) + ' · zuletzt ' + muDay(t.l) + who(t.lw) + ' · nächstes ' + (t.next ? muDay(t.next) : '–'))).join('') + '</div>' +
+        '<p class="cap">Verbrauchsartikel · wann nachgekauft wird</p><div class="grp">' + rs.map(r => row(r.n, H.everyText(r.e) + ' · zuletzt gekauft ' + muDay(r.l) + ' · nächstes ' + muDay(r.nx.next))).join('') + '</div>' +
+        '<p class="foot">Sortiert nach dem nächsten Termin. Die App speichert nur das letzte Mal, keinen Langzeitverlauf.</p>', '');
+    }
+    if (sheet.t === 'wiki') {
+      return shell('Haushalt-Wissen', H.WIKI.map((w, i) => { const op = !!S.open['w' + i]; return '<div class="grp" style="margin-bottom:10px"><button type="button" class="row chev" data-act="wtog" data-i="' + i + '" aria-expanded="' + op + '"><span class="grow"><b>' + esc(w[0]) + '</b></span></button>' + (op ? '<div class="pad"><ul style="margin:0;padding-left:18px;display:grid;gap:6px;font-size:14.5px;line-height:1.4">' + w[1].map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>' : '') + '</div>'; }).join(''), '');
+    }
+    if (sheet.t === 'trip') {
+      const x = S.trips[sheet.id]; if (!x || x.x) return '';
+      return shell('Einkauf', '<p class="sub" style="margin-bottom:10px">' + esc(H.fmtDay(x.t)) + ', ' + esc(H.fmtTime(x.t)) + ' · ' + esc(H.SNAME[x.s]) + ' · ' + esc(names()[x.b]) + '</p><div class="grp">' + (x.it.length ? x.it.map(n => '<div class="row"><span class="grow">' + esc(n) + '</span></div>').join('') : '<div class="pad sub">Keine Einzelheiten gespeichert.</div>') + '</div>' + (x.n > x.it.length ? '<p class="foot">Und ' + (x.n - x.it.length) + ' weitere.</p>' : ''),
+        '<div class="actions"><button type="button" class="btn danger" data-act="tdel">Aus dem Verlauf löschen</button></div>');
+    }
+    if (sheet.t === 'pick') {
+      const on = openNames(), st = S.store, ks = H.known(S.fav).filter(e => e.s === st);
+      let b = '<p class="foot" style="margin:0 2px 10px">' + esc(H.STORES.find(x => x[0] === st)[2]) + '. Antippen setzt den Artikel auf die Liste, nochmal antippen nimmt ihn wieder runter.</p>';
+      S.set.route[st].forEach(c => {
+        const l = ks.filter(e => e.c === c).sort((a, b2) => a.n.localeCompare(b2.n, 'de'));
+        if (l.length) b += '<p class="cap">' + esc(H.CNAME[c]) + '</p><div class="grp">' + l.map(e => '<div class="li' + (on.has(e.key) ? ' done pk' : '') + '"><button type="button" class="chk" data-act="ptog" data-k="' + esc(e.key) + '" aria-label="' + esc(e.n) + (on.has(e.key) ? ' von der Liste nehmen' : ' auf die Liste') + '"><span class="box"></span></button><button type="button" class="lt" data-act="ptog" data-k="' + esc(e.key) + '"><b>' + esc(e.n) + '</b></button></div>').join('') + '</div>';
+      });
+      if (!ks.length) b += '<div class="empty">Für diesen Laden gibt es noch keine Vorschläge. Was ihr hier kauft und abhakt, taucht danach hier auf.</div>';
+      return shell('Artikel auswählen', b);
+    }
+    if (sheet.t === 'join') {
+      return shell('Gemeinsame Liste', '<p class="sub" style="margin-bottom:14px">Dieses Gerät mit der gemeinsamen Liste verbinden? Was jetzt hier gespeichert ist, wird durch die gemeinsame Liste ersetzt.</p><div class="actions"><button type="button" class="btn" data-act="joinok">Verbinden</button><button type="button" class="btn gray" data-act="close">Abbrechen</button></div>');
+    }
+    return '';
+  }
+  function readSheet() {
+    if (!sheet) return;
+    const v = id => { const e = $(id); return e ? e.value : null; };
+    const d = sheet.d;
+    if (sheet.t === 'item') { if (v('f_n') !== null) d.n = v('f_n'); if (v('f_q') !== null) d.q = v('f_q'); if (v('f_c')) d.c = v('f_c'); }
+    if (sheet.t === 'task') {
+      if (v('t_n') !== null) d.n = v('t_n'); if (v('t_af') !== null) d.af = v('t_af'); if (v('t_k') !== null) d.k = v('t_k'); if (v('t_u')) d.u = v('t_u'); if (v('t_d') !== null) d.d = v('t_d'); if (v('t_l') !== null) d.l = v('t_l');
+      if (v('t_m') !== null) d.min = v('t_m'); if (v('t_q') !== null) d.q = v('t_q'); const p = $('t_p'); if (p) d.p = p.checked;
+    }
+    if (sheet.t === 'rec') {
+      if (v('r_n') !== null) d.n = v('r_n'); if (v('r_c')) d.c = v('r_c'); if (v('r_k') !== null) d.k = v('r_k'); if (v('r_u')) d.u = v('r_u'); if (v('r_l') !== null) d.l = v('r_l');
+      const p = $('r_p'); if (p) d.p = p.checked;
+    }
+  }
+  function saveSheet() {
+    readSheet();
+    if (!sheet) return true;
+    const d = sheet.d;
+    if (sheet.t === 'item') {
+      const n = d.n.trim().replace(/\s+/g, ' ');
+      if (!n) { toast('Bitte einen Namen eingeben.'); return false; }
+      const old = S.items[sheet.id];
+      if (old && !old.x) {
+        putItem(sheet.id, { n, q: d.q.trim(), s: d.s, c: d.c });
+        if (old.c !== d.c || old.s !== d.s) { S.lrn[n.toLowerCase().slice(0, 60)] = { c: d.c, s: d.s, m: Date.now() }; }
+        if (S.store !== d.s && old.s !== d.s) S.store = d.s;
+      }
+    } else if (sheet.t === 'task') {
+      const n = d.n.trim().replace(/\s+/g, ' ');
+      if (!n) { toast('Bitte einen Namen eingeben.'); return false; }
+      const id = sheet.id || H.uid();
+      if (d.af) { let x = d.af, k = 0; while (x && k++ < 8) { if (x === id) { toast('Das wäre ein Kreis: Die andere Aufgabe kommt schon nach dieser.'); return false; } x = S.tk[x] && !S.tk[x].x ? S.tk[x].af : ''; } }
+      const k = Math.max(1, Math.min(99, Math.round(Number(d.k)) || 1)), e = d.af ? 0 : Math.min(730, k * Number(d.u));
+      const l = H.DATE_RE.test(d.l) && d.l <= H.today() ? d.l : H.today();
+      const old = S.tk[id] && !S.tk[id].x ? S.tk[id] : null;
+      putTk(id, { n, w: d.w, e, d: d.af ? -1 : Number(d.d), min: Math.max(0, Math.min(240, Math.round(Number(d.min)) || 0)), l, lw: old ? old.lw : -1, t: old ? old.t : '', af: d.af || '', q: d.q.trim(), p: d.p ? 1 : 0, chk: 0 });
+    } else if (sheet.t === 'rec') {
+      const n = d.n.trim().replace(/\s+/g, ' ');
+      if (!n) { toast('Bitte einen Namen eingeben.'); return false; }
+      const k = Math.max(1, Math.min(99, Math.round(Number(d.k)) || 1)), e = Math.min(730, k * Number(d.u));
+      const l = H.DATE_RE.test(d.l) && d.l <= H.today() ? d.l : H.today();
+      const rid = sheet.id || H.uid();
+      putRec(rid, { n, s: d.s, c: d.c, e, l, p: d.p ? 1 : 0 });
+      if (sheet.from && S.items[sheet.from] && !S.items[sheet.from].x) putItem(sheet.from, { r: rid });
+    }
+    return true;
+  }
+  function taskDraft(id) {
+    const t = S.tk[id], e = t.e || 7, u = e % 30 === 0 ? '30' : e % 7 === 0 ? '7' : '1';
+    return { n: t.n, w: t.w, k: String(e / Number(u)), u, d: String(t.d), l: t.l, min: String(t.min), af: t.af || '', q: t.q || '', p: !!t.p };
+  }
+  function recDraft(id) {
+    const r = S.rec[id], e = r.e;
+    const u = e % 30 === 0 ? '30' : e % 7 === 0 ? '7' : '1';
+    return { n: r.n, s: r.s, c: r.c, k: String(e / Number(u)), u, l: r.l, p: !!r.p };
+  }
+
+  /* ---------- Darstellung ---------- */
+  function render() {
+    readSheet();
+    const main = $('main'), sc = window.scrollY;
+    if (S.tab === 'list' && main.dataset.tab === 'list' && $('lbody')) {
+      const all = items(), open = all.filter(i => !i.d);
+      $('lbody').innerHTML = listBody(all, open, S.store); $('lsub').textContent = subText(all, open);
+    } else {
+      main.innerHTML = '<div class="view">' + (S.tab === 'list' ? viewList() : S.tab === 'rec' ? viewRec() : S.tab === 'tasks' ? viewTasks() : S.tab === 'hist' ? viewHist() : viewMore()) + '</div>';
+      main.dataset.tab = S.tab;
+    }
+    const oldShb = $('sheetc').querySelector('.shb'), keepTop = oldShb && sheet && sheet.t === 'pick' ? oldShb.scrollTop : 0;
+    $('sheetc').innerHTML = sheetHtml();
+    if (keepTop) { const nb = $('sheetc').querySelector('.shb'); if (nb) nb.scrollTop = keepTop; }
+    document.body.classList.toggle('lock', !!sheet);
+    updateTabs();
+    if (!sheet) window.scrollTo(0, sc);
+  }
+  function updateTabs() {
+    document.querySelectorAll('#tabs [data-tab]').forEach(b => { if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    const n = dueRecs().length, bd = $('rbadge');
+    if (bd) { bd.hidden = !n; bd.textContent = n; }
+    const tn = taskDue(String(S.me)).length + muPending().length, tb = $('tbadge');
+    if (tb) { tb.hidden = !tn; tb.textContent = tn; }
+  }
+
+  /* ---------- Ereignisse ---------- */
+  function act(a, t) {
+    const id = t.dataset.id, st = t.dataset.s;
+    if (a === 'tab') { $('toast').hidden = true; readSheet(); S.tab = t.dataset.tab; sheet = null; save(true); render(); window.scrollTo(0, 0); return; }
+    if (a === 'store') { S.store = st; save(true); render(); return; }
+    if (a === 'tog') { toggle(id); return; }
+    if (a === 'tdone') { doneTask(id); return; }
+    if (a === 'tf') { S.tf = t.dataset.v; save(true); render(); return; }
+    if (a === 'mdone') { const r = S.mu[id]; if (r && !r.x) { const nx = H.muNext(r, H.today()); S.mu[id] = Object.assign({}, r, { dn: nx, m: Date.now() }); save(); render(); toast(r.n + ' rausgestellt'); } return; }
+    if (a === 'muimp') { const f = $('mufile'); if (f) f.click(); return; }
+    if (a === 'chkok') { tasks().forEach(x => { if (x.chk) putTk(x.id, { chk: 0 }); }); save(); render(); return; }
+    if (a === 'tedit') { if (!S.tk[id] || S.tk[id].x) return; sheet = { t: 'task', id, d: taskDraft(id) }; render(); return; }
+    if (a === 'cattk') { sheet = { t: 'cat', k: 'tk', d: {} }; render(); return; }
+    if (a === 'catrec') { sheet = { t: 'cat', k: 'rec', d: {} }; render(); return; }
+    if (a === 'plan') { sheet = { t: 'plan', d: {} }; render(); return; }
+    if (a === 'catadd') {
+      const i = Number(t.dataset.i), sc = $('sheetc').querySelector('.shb'), top = sc ? sc.scrollTop : 0;
+      if (sheet && sheet.k === 'tk') { const x = H.CAT_TK[i]; if (x) putTk(H.uid(), { n: x[0], w: 2, e: x[1], d: -2, min: x[2], l: H.today(), lw: -1, t: '', af: '', q: '', p: 0, chk: 0 }); }
+      else if (sheet && sheet.k === 'rec') { const x = H.CAT_REC[i]; if (x) putRec(H.uid(), { n: x[0], s: x[1], c: x[2], e: x[3], l: H.today(), p: 0 }); }
+      save(); render(); const n = $('sheetc').querySelector('.shb'); if (n) n.scrollTop = top; return;
+    }
+    if (a === 'wiki') { sheet = { t: 'wiki', d: {} }; render(); return; }
+    if (a === 'wtog') { const k = 'w' + t.dataset.i; S.open[k] = !S.open[k]; render(); return; }
+    if (a === 'tnew') { sheet = { t: 'task', id: '', d: { n: '', w: 2, k: '1', u: '7', d: '-2', l: H.today(), min: '15', af: '', q: '', p: false } }; render(); return; }
+    if (a === 'tw') { readSheet(); sheet.d.w = Number(t.dataset.v); render(); return; }
+    if (a === 'tnow') { const sid = sheet.id; if (!saveSheet()) return; sheet = null; doneTask(sid); return; }
+    if (a === 'tdelt') { kill(S.tk, sheet.id); tasks().forEach(x => { if (x.af === sheet.id) putTk(x.id, { af: '', e: 7, d: -2 }); }); sheet = null; save(); render(); toast('Aufgabe gelöscht'); return; }
+    if (a === 'finish') { closeTrip(S.store); return; }
+    if (a === 'tview') { sheet = { t: 'trip', id }; render(); return; }
+    if (a === 'tdel') { kill(S.trips, sheet.id); sheet = null; save(); render(); toast('Einkauf gelöscht'); return; }
+    if (a === 'pick') { sheet = { t: 'pick' }; render(); return; }
+    if (a === 'qadd' || a === 'sadd') { const e = entryFor(t.dataset.k); if (e) { addItem(e.n, { s: e.s, c: e.c }); if (a === 'sadd') { const i = $('addin'); if (i) { i.value = ''; i.focus(); } updateSugg(); } } return; }
+    if (a === 'ptog') {
+      const e = entryFor(t.dataset.k); if (!e) return;
+      const ex = items().find(i => !i.d && i.n.toLowerCase().slice(0, 60) === e.key);
+      if (ex) { kill(S.items, ex.id); save(); render(); } else addItem(e.n, { s: e.s, c: e.c });
+      return;
+    }
+    if (a === 'undo') { if (toast.undo) { toast.undo(); toast.undo = null; $('toast').hidden = true; } return; }
+    if (a === 'clear') { const n = purgeDone(S.store); if (n) toast(n + ' erledigte entfernt'); save(); render(); return; }
+    if (a === 'dueall') { const l = dueRecs(); l.forEach(r => toList(r.id)); if (l.length) toast(l.length + ' Dauerartikel auf der Liste'); save(); render(); return; }
+    if (a === 'rlist') { toList(id); save(); render(); return; }
+    if (a === 'edit') { const it = S.items[id]; if (!it || it.x) return; sheet = { t: 'item', id, d: { n: it.n, q: it.q || '', s: it.s, c: it.c, r: it.r || '' } }; render(); return; }
+    if (a === 'redit') { if (!S.rec[id] || S.rec[id].x) return; sheet = { t: 'rec', id, d: recDraft(id) }; render(); return; }
+    if (a === 'rnew') { sheet = { t: 'rec', id: '', d: { n: '', s: S.store, c: 'sonst', k: '4', u: '7', l: H.today(), p: false } }; render(); return; }
+    if (a === 'close') { sheet = null; render(); return; }
+    if (a === 'done') { if (saveSheet()) { sheet = null; save(); render(); } return; }
+    if (a === 'fs' || a === 'rs') { readSheet(); sheet.d.s = st; render(); return; }
+    if (a === 'idel') { kill(S.items, sheet.id); sheet = null; save(); render(); toast('Gelöscht'); return; }
+    if (a === 'mkrec') {
+      readSheet(); const d = sheet.d;
+      if (!saveSheet()) return;
+      sheet = { t: 'rec', id: '', d: { n: d.n.trim(), s: d.s, c: d.c, k: '4', u: '7', l: H.today(), p: false }, from: sheet.id };
+      save(); render(); return;
+    }
+    if (a === 'rbought') { readSheet(); sheet.d.l = H.today(); if (saveSheet()) { sheet = null; save(); render(); toast('Turnus neu gestartet'); } return; }
+    if (a === 'rdel') { kill(S.rec, sheet.id); sheet = null; save(); render(); toast('Dauerartikel gelöscht'); return; }
+    if (a === 'me') { S.me = Number(t.dataset.i) === 1 ? 1 : 0; save(true); render(); return; }
+    if (a === 'ropen') { S.open[st] = !S.open[st]; render(); return; }
+    if (a === 'rup' || a === 'rdn') {
+      const i = Number(t.dataset.i), r = S.set.route[st], j = a === 'rup' ? i - 1 : i + 1;
+      if (j < 0 || j >= r.length) return;
+      [r[i], r[j]] = [r[j], r[i]]; S.set.m = Date.now(); save(); render(); return;
+    }
+    if (a === 'rreset') { S.set.route[st] = H.defaultRoute()[st]; S.set.m = Date.now(); save(); render(); return; }
+    if (a === 'connect') {
+      const u = normUrl(($('syncurl') || {}).value);
+      if (!u) { setSs('err', 'Das ist keine Firebase-Adresse. Sie endet auf firebasedatabase.app oder firebaseio.com.'); const el = $('syncbox'); if (el) el.innerHTML = syncBox(); return; }
+      S.sync = { url: u, code: newCode(), fresh: false }; ss = { state: '', msg: '' }; save(true); render(); syncNow(); return;
+    }
+    if (a === 'joinok') { S.sync = { url: sheet.u, code: sheet.c, fresh: true }; sheet = null; ss = { state: '', msg: '' }; save(true); render(); syncNow(); return; }
+    if (a === 'syncnow') { syncNow(); return; }
+    if (a === 'unlink') { S.sync = { url: '', code: '', fresh: false }; ss = { state: '', msg: '' }; save(true); render(); return; }
+    if (a === 'copy') {
+      const el = $('invite'); if (!el) return;
+      const sel = () => { el.focus(); el.select(); try { el.setSelectionRange(0, 9999); } catch (e) { /* egal */ } };
+      try { navigator.clipboard.writeText(el.value).then(() => toast('Link kopiert'), () => { sel(); toast('Link markiert, bitte kopieren'); }); } catch (e) { sel(); toast('Link markiert, bitte kopieren'); }
+    }
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (t) { e.preventDefault(); act(t.dataset.act, t); }
+  });
+  function updateSugg() {
+    const el = $('sugg'), i = $('addin'); if (!el) return;
+    const l = i ? H.suggest(i.value, H.known(S.fav), openNames()) : [];
+    el.hidden = !l.length;
+    el.innerHTML = l.map(e => '<button type="button" class="chip q" data-act="sadd" data-k="' + esc(e.key) + '">' + esc(e.n) + '<span class="sm"> · ' + esc(H.SNAME[e.s]) + '</span></button>').join('');
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'addin') updateSugg(); });
+  document.addEventListener('submit', e => {
+    const f = e.target;
+    if (f && f.dataset && f.dataset.form === 'add') { e.preventDefault(); const i = $('addin'); const v = i ? i.value : ''; if (i) i.value = ''; addItem(v); updateSugg(); const n = $('addin'); if (n) { try { n.focus(); } catch (x) { /* egal */ } } }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t && t.id === 't_af' && sheet && sheet.t === 'task') { readSheet(); render(); return; }
+    if (t && t.id === 'mufile') {
+      const f = t.files && t.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => { const n = H.muImport(S.mu, H.parseIcs(String(rd.result || '')), Date.now()); if (n) { save(); toast(n + ' Termine übernommen'); } else toast('Keine Termine in der Datei gefunden'); render(); };
+      rd.onerror = () => toast('Datei konnte nicht gelesen werden');
+      rd.readAsText(f); return;
+    }
+    if (t && t.id === 'roundsel') { S.set.round = Number(t.value); S.set.m = Date.now(); save(); render(); return; }
+    if (t && t.dataset && t.dataset.name != null) {
+      const i = Number(t.dataset.name), v = String(t.value || '').trim().slice(0, 20);
+      if (v && (i === 0 || i === 1)) { S.set.names = S.set.names.slice(); S.set.names[i] = v; S.set.m = Date.now(); save(); }
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet) { sheet = null; render(); } });
+
+  checkHash();
+  render();
+  if (!syncOn() && autoClose()) { save(true); render(); }
+  if (syncOn()) syncNow();
+  window.__HH = { get S() { return S; }, render, addItem, toggle, doc, syncNow };
+})();
+
+</script>
