@@ -72,6 +72,7 @@ eq(H.nkAdvance('2026-11-07', 2, '2026-12-10'), { run: '2026-12-05', next: '2026-
 eq(H.nkId('abcd', '2026-11-07'), H.nkId('abcd', '2026-11-07'), 'id stabil'); eq(H.nkId('abcd', '2026-11-07') !== H.nkId('abcd', '2026-12-05'), true, 'id je Runde'); eq(/^[a-z0-9]{4,24}$/.test(H.nkId('t1a2b3c4d5e6', '2026-11-07')), true, 'id gültig');
 eq(H.nkFirst('2026-11-05'), '2026-11-07', 'erster Tag Samstag'); eq(H.nkFirst('2026-11-07'), '2026-11-14', 'Samstag zählt nicht');
 eq(H.cleanDoc({ v: 1, set: { nkW: 6, nkN: '2026-11-07' } }).set.nkW, 6, 'Rhythmus bleibt'); eq(H.cleanDoc({ v: 1, set: { nkW: 5, nkN: 'x' } }).set.nkW + H.cleanDoc({ v: 1, set: { nkN: 'x' } }).set.nkN, '4', 'ungültig fällt zurück');
+eq(H.nkQty({ e: 21 }, 6), 2, 'Kaffee reicht bei 6 Wochen nicht mit einer'); eq(H.nkQty({ e: 56 }, 6), 1, 'eine reicht');
 eq(H.guess('Backpapier').s, 'dis', 'Backpapier nicht Drogerie'); eq(H.known({}).find(e => e.n === 'Backpapier').s, 'dis', 'Katalog auch nicht'); eq(H.seed(0)[Object.keys(H.seed(0)).find(k => H.seed(0)[k].n === 'Backpapier')].s, 'dis', 'Startbestand auch nicht');
 // Härtung
 const P = H.cleanDoc(JSON.parse('{"v":1,"fav":{"__proto__":{"n":"x","m":1},"milch":{"n":"Milch","m":1}},"lrn":{"__proto__":{"c":"tk","m":1}}}'));

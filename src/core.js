@@ -87,6 +87,7 @@
   }
   /* Nachkauf-Tag: alle w Wochen. Ein Artikel kommt in der Runde dran, nach der er bis zur nächsten nicht mehr reichen würde. */
   const nkDue = (r, date, w) => addDays(r.l, r.e) < addDays(date, 7 * w);
+  const nkQty = (r, w) => Math.ceil(7 * w / r.e);
   const nkPick = (recs, date, w) => recs.filter(r => !r.p && nkDue(r, date, w));
   function nkNext(r, date, w) { let d = date; for (let i = 0; i < 60 && !nkDue(r, d, w); i++) d = addDays(d, 7 * w); return d; }
   /* run = letzter fälliger Termin (oder ''), next = erster Termin danach. Verpasste Runden werden zu einer zusammengefasst. */
@@ -429,6 +430,6 @@
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, nkDue, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);

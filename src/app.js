@@ -149,7 +149,7 @@
     if (!S.set.nkN) { S.set = Object.assign({}, S.set, { nkN: H.nkFirst(t0), m: Date.now() }); save(); render(); return true; }
     const a = H.nkAdvance(S.set.nkN, S.set.nkW, t0); if (!a.run) return false;
     let n = 0;
-    H.nkPick(recs(), a.run, S.set.nkW).filter(r => !onList(r.id)).forEach(r => { const id = H.nkId(r.id, a.run); if (S.items[id]) return; putItem(id, { n: r.n, s: r.s, c: r.c, q: '', b: S.me, d: 0, r: r.id }); n++; });
+    H.nkPick(recs(), a.run, S.set.nkW).filter(r => !onList(r.id)).forEach(r => { const id = H.nkId(r.id, a.run); if (S.items[id]) return; const k = H.nkQty(r, S.set.nkW); putItem(id, { n: r.n, s: r.s, c: r.c, q: k > 1 ? k + ' Stück' : '', b: S.me, d: 0, r: r.id }); n++; });
     S.set = Object.assign({}, S.set, { nkN: a.next, m: Date.now() });
     save(); render();
     if (n) toast(n + ' Nachkauf-Artikel auf der Liste');
