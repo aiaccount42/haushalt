@@ -62,6 +62,17 @@ eq(H.cleanDoc({ v: 1, set: { round: 9 } }).set.round, 4, 'round default'); eq(H.
   const key = Object.keys(mu).find(k => mu[k].n.startsWith('Sperrm')); eq(!!key && mu[key].a === 0 && mu[key].d[0] === '2028-01-10', true, 'neue Art, Info');
   eq(H.merge({ mu: mu }, { mu: {} }, 10).mu.restabfall.m, 5, 'merge mu');
 }
+// Nachkauf-Tag
+eq(H.nkDue({ l: '2026-10-01', e: 56 }, '2026-11-07', 4), true, 'reicht nicht bis zur nächsten Runde'); eq(H.nkDue({ l: '2026-11-01', e: 90 }, '2026-11-07', 4), false, 'reicht noch');
+eq(H.nkDue({ l: '2026-10-01', e: 65 }, '2026-11-07', 4), false, 'reicht genau bis zur nächsten Runde');
+eq(H.nkPick([{ l: '2026-01-01', e: 30, p: 1 }, { l: '2026-01-01', e: 30, p: 0 }], '2026-11-07', 4).length, 1, 'pausiert bleibt weg');
+eq(H.nkNext({ l: '2026-11-01', e: 90 }, '2026-11-07', 4), '2027-01-30', 'nächste passende Runde'); eq(H.nkNext({ l: '2026-10-01', e: 30 }, '2026-11-07', 4), '2026-11-07', 'diese Runde');
+eq(H.nkAdvance('2026-11-07', 4, '2026-11-06'), { run: '', next: '2026-11-07' }, 'noch nicht dran'); eq(H.nkAdvance('2026-11-07', 4, '2026-11-07'), { run: '2026-11-07', next: '2026-12-05' }, 'heute dran');
+eq(H.nkAdvance('2026-11-07', 2, '2026-12-10'), { run: '2026-12-05', next: '2026-12-19' }, 'verpasste Runden fassen zusammen');
+eq(H.nkId('abcd', '2026-11-07'), H.nkId('abcd', '2026-11-07'), 'id stabil'); eq(H.nkId('abcd', '2026-11-07') !== H.nkId('abcd', '2026-12-05'), true, 'id je Runde'); eq(/^[a-z0-9]{4,24}$/.test(H.nkId('t1a2b3c4d5e6', '2026-11-07')), true, 'id gültig');
+eq(H.nkFirst('2026-11-05'), '2026-11-07', 'erster Tag Samstag'); eq(H.nkFirst('2026-11-07'), '2026-11-14', 'Samstag zählt nicht');
+eq(H.cleanDoc({ v: 1, set: { nkW: 6, nkN: '2026-11-07' } }).set.nkW, 6, 'Rhythmus bleibt'); eq(H.cleanDoc({ v: 1, set: { nkW: 5, nkN: 'x' } }).set.nkW + H.cleanDoc({ v: 1, set: { nkN: 'x' } }).set.nkN, '4', 'ungültig fällt zurück');
+eq(H.guess('Backpapier').s, 'dis', 'Backpapier nicht Drogerie'); eq(H.known({}).find(e => e.n === 'Backpapier').s, 'dis', 'Katalog auch nicht'); eq(H.seed(0)[Object.keys(H.seed(0)).find(k => H.seed(0)[k].n === 'Backpapier')].s, 'dis', 'Startbestand auch nicht');
 // Härtung
 const P = H.cleanDoc(JSON.parse('{"v":1,"fav":{"__proto__":{"n":"x","m":1},"milch":{"n":"Milch","m":1}},"lrn":{"__proto__":{"c":"tk","m":1}}}'));
 eq(Object.keys(P.fav), ['milch'], 'proto in fav raus'); eq(Object.getPrototypeOf(P.fav) === Object.prototype && Object.getPrototypeOf(P.lrn) === Object.prototype, true, 'prototyp unverändert');

@@ -10,7 +10,7 @@
   let S;
   function fresh() {
     const now = Date.now();
-    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: '0', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
+    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: '0', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), nkW: 4, nkN: '', m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
   }
   function load() {
     try {
@@ -21,6 +21,7 @@
         s.items = d.items; s.rec = d.rec; s.lrn = d.lrn; s.fav = d.fav; s.trips = d.trips; s.tk = d.tk; s.set = d.set; s.mu = r.mu ? d.mu : H.seedMuell(); s.muMig = !!r.muMig; s.wMig = !!r.wMig;
         if (!s.wMig) { if (!s.items.iwsack01) s.items.iwsack01 = fresh().items.iwsack01; s.wMig = true; }
         if (!s.muMig) { ['Restmüll rausbringen', 'Biomüll rausbringen', 'Gelben Sack rausbringen', 'Papiertonne rausbringen'].forEach(n => { const id = H.taskId(n); if (s.tk[id] && !s.tk[id].x) s.tk[id] = { x: 1, m: Date.now() }; }); s.muMig = true; } s.tkSeed = !!r.tkSeed; s.tf = ['all', '0', '1'].includes(r.tf) ? r.tf : 'all';
+        if (!r.bpMig) { Object.keys(s.rec).forEach(k => { const x = s.rec[k]; if (!x.x && x.n === 'Backpapier' && x.s === 'dro') s.rec[k] = Object.assign({}, x, { s: 'dis', m: Date.now() }); }); } s.bpMig = true;
         if (!s.tkSeed) { s.tk = Object.assign(H.seedTasks(Date.now(), s.set.round), s.tk); s.tkSeed = true; }
         s.me = r.me === 1 ? 1 : 0; s.tf = String(s.me); s.tab = ['list', 'rec', 'tasks', 'hist', 'more'].includes(r.tab) ? r.tab : 'list'; s.store = H.SK.includes(r.store) ? r.store : 'dis';
         if (r.sync && normUrl(r.sync.url) && /^[a-z0-9]{8,32}$/.test(r.sync.code || '')) s.sync = { url: normUrl(r.sync.url), code: r.sync.code, fresh: !!r.sync.fresh };
@@ -33,7 +34,7 @@
   function normUrl(u) { u = String(u || '').trim().replace(/\/+$/, '').toLowerCase(); return URL_RE.test(u) ? u : ''; }
   const doc = () => ({ v: 1, items: S.items, rec: S.rec, lrn: S.lrn, fav: S.fav, trips: S.trips, tk: S.tk, mu: S.mu, set: S.set });
   function save(noSync) {
-    try { localStorage.setItem(KEY, JSON.stringify({ items: S.items, rec: S.rec, lrn: S.lrn, fav: S.fav, trips: S.trips, tk: S.tk, mu: S.mu, muMig: S.muMig, wMig: S.wMig, tkSeed: S.tkSeed, tf: S.tf, set: S.set, me: S.me, tab: S.tab, store: S.store, sync: S.sync })); } catch (e) { /* egal */ }
+    try { localStorage.setItem(KEY, JSON.stringify({ items: S.items, rec: S.rec, lrn: S.lrn, fav: S.fav, trips: S.trips, tk: S.tk, mu: S.mu, muMig: S.muMig, wMig: S.wMig, bpMig: true, tkSeed: S.tkSeed, tf: S.tf, set: S.set, me: S.me, tab: S.tab, store: S.store, sync: S.sync })); } catch (e) { /* egal */ }
     if (!noSync) schedSync();
   }
   S = load();
@@ -52,7 +53,7 @@
     const snap = map[id]; kill(map, id); sheet = null; save(); render();
     toast(msg, () => { map[id] = Object.assign({}, snap, { m: Date.now() }); save(); render(); });
   }
-  const dueRecs = () => recs().filter(r => !r.p && H.due(r).left <= 0 && !onList(r.id));
+  const nkOpen = () => items().filter(i => !i.d && i.r);
 
   /* ---------- Aktionen ---------- */
   function toast(msg, undo) {
@@ -82,7 +83,7 @@
     if (now && it.r && S.rec[it.r] && !S.rec[it.r].x) {
       const prev = S.rec[it.r].l, rid = it.r, r = S.rec[rid];
       putRec(rid, { l: H.today() });
-      toast(r.n + ' gekauft · wieder ' + H.leftText(r.e), () => { putItem(id, { d: 0 }); favBump(S.items[id], -1); putRec(rid, { l: prev }); save(); render(); });
+      toast(r.n + ' gekauft', () => { putItem(id, { d: 0 }); favBump(S.items[id], -1); putRec(rid, { l: prev }); save(); render(); });
     }
     save(); render();
   }
@@ -141,6 +142,19 @@
     const r = S.rec[rid]; if (!r || r.x || onList(rid)) return;
     putItem(H.uid(), { n: r.n, s: r.s, c: r.c, q: '', b: S.me, d: 0, r: rid });
   }
+  /* Nachkauf-Tag: alles, was bis zur nächsten Runde nicht reicht, kommt von selbst auf die Liste. */
+  function nkTick() {
+    if (typing()) return false;
+    const t0 = H.today();
+    if (!S.set.nkN) { S.set = Object.assign({}, S.set, { nkN: H.nkFirst(t0), m: Date.now() }); save(); render(); return true; }
+    const a = H.nkAdvance(S.set.nkN, S.set.nkW, t0); if (!a.run) return false;
+    let n = 0;
+    H.nkPick(recs(), a.run, S.set.nkW).filter(r => !onList(r.id)).forEach(r => { const id = H.nkId(r.id, a.run); if (S.items[id]) return; putItem(id, { n: r.n, s: r.s, c: r.c, q: '', b: S.me, d: 0, r: r.id }); n++; });
+    S.set = Object.assign({}, S.set, { nkN: a.next, m: Date.now() });
+    save(); render();
+    if (n) toast(n + ' Nachkauf-Artikel auf der Liste');
+    return true;
+  }
   function purgeDone(st) {
     let n = 0;
     items().forEach(i => { if (i.d && i.s === st) { kill(S.items, i.id); n++; } });
@@ -183,10 +197,11 @@
       if (autoClose()) { save(); render(); }
     } catch (err) { setSs('err', err && err.message ? err.message : 'Abgleich fehlgeschlagen.'); }
     syncing = false;
+    nkTick();
     if (again) { again = false; schedSync(); }
   }
   setInterval(() => { try { if (document.visibilityState !== 'hidden') syncNow(); } catch (e) { /* egal */ } }, 20000);
-  document.addEventListener('visibilitychange', () => { try { if (document.visibilityState === 'visible') { syncNow(); render(); } } catch (e) { /* egal */ } });
+  document.addEventListener('visibilitychange', () => { try { if (document.visibilityState === 'visible') { syncNow(); if (!syncOn()) nkTick(); render(); } } catch (e) { /* egal */ } });
   const b64e = o => { const s = btoa(unescape(encodeURIComponent(JSON.stringify(o)))); return s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
   const b64d = t => { try { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; return JSON.parse(decodeURIComponent(escape(atob(t)))); } catch (e) { return null; } };
   function inviteLink() { return location.href.split('#')[0] + '#j=' + b64e({ u: S.sync.url, c: S.sync.code }); }
@@ -206,7 +221,7 @@
     return '<div class="seg" role="group" aria-label="Laden">' + H.STORES.map(([k, l]) => '<button type="button" data-act="store" data-s="' + k + '" aria-pressed="' + (S.store === k) + '">' + esc(l) + '<i>' + open.filter(i => i.s === k).length + '</i></button>').join('') + '</div>';
   }
   function itemRow(i) {
-    const sub = [i.q, i.b !== S.me ? 'von ' + names()[i.b] : '', i.r ? 'Nachkauf' : ''].filter(Boolean).join(' · ');
+    const sub = [i.q, i.b !== S.me && !i.r ? 'von ' + names()[i.b] : '', i.r ? 'Nachkauf' : ''].filter(Boolean).join(' · ');
     return '<div class="li' + (i.d ? ' done' : '') + '"><button type="button" class="chk" data-act="tog" data-id="' + i.id + '" aria-label="' + esc(i.n) + (i.d ? ' wieder auf die Liste' : ' abhaken') + '"><span class="box"></span></button>' +
       '<button type="button" class="lt" data-act="edit" data-id="' + i.id + '"><b>' + esc(i.n) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</button></div>';
   }
@@ -219,8 +234,6 @@
   }
   function listBody(all, open, st) {
     let h = storeSeg();
-    const d = dueRecs();
-    if (d.length) h += '<div class="grp" style="margin-top:12px"><button type="button" class="row chev" data-act="tab" data-tab="rec"><span class="grow"><b>Nachkauf</b></span><span class="val warnt">' + d.length + ' fällig</span></button></div>';
     const mine = open.filter(i => i.s === st);
     if (!mine.length) h += '<div class="empty">Hier ist nichts offen.</div>';
     S.set.route[st].forEach(c => {
@@ -231,12 +244,7 @@
     if (done.length) h += '<p class="cap">Erledigt · ' + done.length + '</p><div class="grp">' + done.map(itemRow).join('') + '</div><div class="actions" style="margin-bottom:6px"><button type="button" class="btn" data-act="finish">Einkauf abschließen · ' + done.length + '</button></div><p class="foot" style="margin-top:0"><button type="button" class="lnk" data-act="clear" style="padding:0;min-height:0;font-size:13px">Nur entfernen, ohne Verlauf</button></p>';
     return h;
   }
-  function recRow(r, mode) {
-    const d = H.due(r), sub = (mode === 'due' ? '' : H.everyText(r.e) + ' · ') + H.SNAME[r.s];
-    const right = mode === 'due' ? '<button type="button" class="btn sm soft" data-act="rlist" data-id="' + r.id + '">Auf die Liste</button>' : mode === 'on' ? '<span class="chip">steht drauf</span>' : '';
-    const when = r.p ? 'pausiert' : H.leftText(d.left);
-    return '<div class="li padl"><button type="button" class="lt" data-act="redit" data-id="' + r.id + '"><b>' + esc(r.n) + '</b><small' + (!r.p && d.left <= 0 && mode !== 'on' ? ' class="warnt"' : '') + '>' + esc(when) + ' · ' + esc(sub) + '</small></button>' + right + '</div>';
-  }
+  const recRow = (r, sub) => '<div class="li padl"><button type="button" class="lt" data-act="redit" data-id="' + r.id + '"><b>' + esc(r.n) + '</b><small>' + esc(sub) + '</small></button></div>';
   const taskWho = t => t.w === 2 ? 'dran: ' + names()[whoTask(t)] : names()[t.w];
   function taskRow(t) {
     const who = S.tf !== 'all' ? '' : taskWho(t);
@@ -256,6 +264,8 @@
     h += '<div class="seg" role="group" aria-label="Wessen Aufgaben">' + [['0', names()[0]], ['1', names()[1]], ['all', 'Alle']].map(([v, l]) => '<button type="button" data-act="tf" data-v="' + v + '" aria-pressed="' + (f === v) + '">' + esc(l) + '</button>').join('') + '</div>';
     const mp = muPending();
     if (mp.length) h += '<p class="cap">Müll</p><div class="grp">' + mp.map(muRow).join('') + '</div>';
+    const nk = nkOpen().length;
+    if (nk) h += '<p class="cap">Einkauf</p><div class="grp"><button type="button" class="row chev" data-act="tab" data-tab="list"><span class="grow"><b>Nachkauf einkaufen</b></span><span class="val">' + nk + ' Artikel</span></button></div>';
     if (all.some(t => t.chk)) h += '<div class="note due" style="margin-top:12px"><b>Müll-Termine prüfen</b><span>Abstand und Wochentag der Müllaufgaben sind Platzhalter. Gleicht sie mit eurem Müllkalender ab (Aufgabe antippen).</span><button type="button" class="btn sm" data-act="chkok">Passt so</button></div>';
     if (heute.length) h += '<p class="cap">Heute</p><div class="grp">' + heute.map(taskRow).join('') + '</div>';
     else h += '<div class="empty">Heute ist nichts fällig.</div>';
@@ -286,19 +296,22 @@
     return h;
   }
   function viewRec() {
-    const rs = recs().sort((a, b) => H.due(a).left - H.due(b).left || byName(a, b));
-    const live = rs.filter(r => !r.p);
-    const g = { due: [], on: [], soon: [], later: [] };
-    live.forEach(r => { const l = H.due(r).left; if (onList(r.id)) g.on.push(r); else if (l <= 0) g.due.push(r); else if (l <= 14) g.soon.push(r); else g.later.push(r); });
-    let h = '<h1 class="ltitle">Nachkauf</h1><p class="lsub">' + (g.due.length ? g.due.length + ' fällig' : 'Gerade ist nichts fällig') + '</p>';
-    const sec = (t, l, mode) => l.length ? '<p class="cap">' + t + '</p><div class="grp">' + l.map(r => recRow(r, mode)).join('') + '</div>' : '';
-    if (g.due.length) h += '<div class="actions" style="margin-top:0"><button type="button" class="btn" data-act="dueall">Alle ' + g.due.length + ' auf die Liste</button></div>';
-    h += sec('Fällig', g.due, 'due') + sec('Steht auf der Liste', g.on, 'on');
-    const pause = rs.filter(r => r.p), rest = g.soon.length + g.later.length + pause.length;
+    const t0 = H.today(), date = S.set.nkN || H.nkFirst(t0), w = S.set.nkW, left = H.diffDays(date, t0);
+    const rs = recs().sort((a, b) => a.s.localeCompare(b.s) || byName(a, b)), live = rs.filter(r => !r.p), pause = rs.filter(r => r.p);
+    const on = live.filter(r => onList(r.id)), free = live.filter(r => !onList(r.id));
+    const now = free.filter(r => H.nkDue(r, date, w)), later = free.filter(r => !H.nkDue(r, date, w)).sort((a, b) => H.nkNext(a, date, w).localeCompare(H.nkNext(b, date, w)) || byName(a, b));
+    let h = '<h1 class="ltitle">Nachkauf</h1>';
+    h += '<div class="grp" style="margin-top:12px"><div class="frow"><label for="nk_d">Nächster Nachkauf-Tag</label><input type="date" id="nk_d" value="' + esc(date) + '" min="' + t0 + '"></div></div>';
+    h += '<p class="foot">' + esc(H.fmtDay(H.toDate(date).getTime())) + ', ' + (left === 0 ? 'heute' : left === 1 ? 'morgen' : 'in ' + left + ' Tagen') + '. Dann steht alles von selbst auf der Liste.</p>';
+    h += '<div class="seg" role="group" aria-label="Abstand der Nachkauf-Tage">' + H.NK_W.map(v => '<button type="button" data-act="nkw" data-v="' + v + '" aria-pressed="' + (w === v) + '">' + v + ' Wochen</button>').join('') + '</div>';
+    const sec = (t, l, f) => l.length ? '<p class="cap">' + t + ' · ' + l.length + '</p><div class="grp">' + l.map(r => recRow(r, f(r))).join('') + '</div>' : '';
+    h += sec('Auf der Liste', on, r => H.SNAME[r.s]) + sec('Kommt am Nachkauf-Tag', now, r => H.SNAME[r.s]);
+    if (!on.length && !now.length && rs.length) h += '<div class="empty">Beim nächsten Nachkauf-Tag ist nichts dran.</div>';
+    const rest = later.length + pause.length;
     if (rest) {
       const op = !!S.open.recmore;
-      h += '<div class="grp" style="margin-top:16px"><button type="button" class="row chev" data-act="ropen" data-s="recmore" aria-expanded="' + op + '"><span class="grow"><b>Alle weiteren</b></span><span class="val">' + rest + '</span></button></div>';
-      if (op) h += sec('In den nächsten 2 Wochen', g.soon, '') + sec('Später', g.later, '') + sec('Pausiert', pause, '');
+      h += '<div class="grp" style="margin-top:16px"><button type="button" class="row chev" data-act="ropen" data-s="recmore" aria-expanded="' + op + '"><span class="grow"><b>Später</b></span><span class="val">' + rest + '</span></button></div>';
+      if (op) h += sec('Spätere Nachkauf-Tage', later, r => esc(H.fmtDay(H.toDate(H.nkNext(r, date, w)).getTime())) + ' · ' + H.SNAME[r.s]) + sec('Pausiert', pause, r => H.SNAME[r.s]);
     }
     if (!rs.length) h += '<div class="empty">Noch keine Artikel.</div>';
     h += '<div class="actions"><button type="button" class="btn gray" data-act="rnew">Neuer Artikel</button><button type="button" class="btn gray" data-act="catrec">Aus dem Katalog</button><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>';
@@ -364,8 +377,8 @@
         '<div class="frow"><span class="lb">Alle</span><span class="two"><input type="number" id="r_k" inputmode="numeric" min="1" max="99" value="' + esc(d.k) + '" aria-label="Anzahl"><select id="r_u" aria-label="Einheit">' + [['1', 'Tage'], ['7', 'Wochen'], ['30', 'Monate']].map(([v, l]) => '<option value="' + v + '"' + (d.u === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></span></div>' +
         '<div class="frow"><label for="r_l">Zuletzt gekauft</label><input type="date" id="r_l" value="' + esc(d.l) + '" max="' + H.today() + '"></div>' +
         '<div class="frow"><span class="lb">Pausiert</span><label class="sw"><input type="checkbox" id="r_p"' + (d.p ? ' checked' : '') + ' aria-label="Pausiert"><i></i></label></div></div>' +
-        '<p class="foot">Er meldet sich, wenn die Zeit seit dem letzten Kauf um ist. Pausiert heißt: keine Erinnerung.</p>',
-        '<div class="actions">' + (sheet.id ? '<button type="button" class="btn soft" data-act="rbought">Gerade gekauft</button><button type="button" class="btn danger" data-act="rdel">Löschen</button>' : '') + '</div>');
+        '<p class="foot">Er kommt am Nachkauf-Tag auf die Liste, wenn er bis zum nächsten nicht mehr reicht. Pausiert heißt: Er kommt nicht von selbst.</p>',
+        '<div class="actions">' + (sheet.id ? (onList(sheet.id) ? '' : '<button type="button" class="btn soft" data-act="rlist">Jetzt auf die Liste</button>') + '<button type="button" class="btn soft" data-act="rbought">Gerade gekauft</button><button type="button" class="btn danger" data-act="rdel">Löschen</button>' : '') + '</div>');
     }
     if (sheet.t === 'tcard') {
       const t = S.tk[sheet.id]; if (!t || t.x) return '';
@@ -414,10 +427,10 @@
     if (sheet.t === 'plan') {
       const t0 = H.today(), who = i => i === 0 || i === 1 ? ' (' + names()[i] + ')' : '';
       const ts = tasks().map(withInfo).filter(t => t.e).sort((a, b) => (a.next || '9').localeCompare(b.next || '9') || a.n.localeCompare(b.n, 'de'));
-      const rs = recs().filter(r => !r.p).map(r => Object.assign({}, r, { nx: H.due(r) })).sort((a, b) => a.nx.next.localeCompare(b.nx.next) || a.n.localeCompare(b.n, 'de'));
+      const rs = recs().filter(r => !r.p).map(r => Object.assign({}, r, { nx: H.nkNext(r, S.set.nkN || t0, S.set.nkW) })).sort((a, b) => a.nx.localeCompare(b.nx) || a.n.localeCompare(b.n, 'de'));
       const row = (n, sub) => '<div class="li padl"><div class="lt"><b>' + esc(n) + '</b><small>' + esc(sub) + '</small></div></div>';
       return shell('Übersicht', '<p class="cap" style="margin-top:0">Aufgaben · wann was dran ist</p><div class="grp">' + ts.map(t => row(t.n, H.everyText(t.e) + ' · zuletzt ' + muDay(t.l) + who(t.lw) + ' · nächstes ' + (t.next ? muDay(t.next) : '–'))).join('') + '</div>' +
-        '<p class="cap">Nachkauf · wann was gekauft wird</p><div class="grp">' + rs.map(r => row(r.n, H.everyText(r.e) + ' · zuletzt gekauft ' + muDay(r.l) + ' · nächstes ' + muDay(r.nx.next))).join('') + '</div>' +
+        '<p class="cap">Nachkauf · wann was gekauft wird</p><div class="grp">' + rs.map(r => row(r.n, H.everyText(r.e) + ' · zuletzt gekauft ' + muDay(r.l) + ' · nächster Nachkauf ' + muDay(r.nx))).join('') + '</div>' +
         '<p class="foot">Sortiert nach dem nächsten Termin. Die App speichert nur das letzte Mal, keinen Langzeitverlauf.</p>', '');
     }
     if (sheet.t === 'wiki') {
@@ -530,9 +543,7 @@
   }
   function updateTabs() {
     document.querySelectorAll('#tabs [data-tab]').forEach(b => { if (b.dataset.tab === (S.tab === 'hist' ? 'more' : S.tab)) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    const n = dueRecs().length, bd = $('rbadge');
-    if (bd) { bd.hidden = !n; bd.textContent = n; }
-    const tn = taskDue(String(S.me)).length + muPending().length, tb = $('tbadge');
+    const tn = taskDue(String(S.me)).length + muPending().length + (nkOpen().length ? 1 : 0), tb = $('tbadge');
     if (tb) { tb.hidden = !tn; tb.textContent = tn; }
   }
 
@@ -585,8 +596,8 @@
     }
     if (a === 'undo') { if (toast.undo) { toast.undo(); toast.undo = null; $('toast').hidden = true; } return; }
     if (a === 'clear') { const n = purgeDone(S.store); if (n) toast(n + ' erledigte entfernt'); save(); render(); return; }
-    if (a === 'dueall') { const l = dueRecs(); l.forEach(r => toList(r.id)); if (l.length) toast(l.length + ' Artikel auf der Liste'); save(); render(); return; }
-    if (a === 'rlist') { toList(id); save(); render(); return; }
+    if (a === 'rlist') { const rid = sheet.id; sheet = null; toList(rid); save(); render(); toast('Auf der Liste'); return; }
+    if (a === 'nkw') { S.set = Object.assign({}, S.set, { nkW: Number(t.dataset.v), m: Date.now() }); save(); render(); return; }
     if (a === 'edit') { const it = S.items[id]; if (!it || it.x) return; sheet = { t: 'item', id, d: { n: it.n, q: it.q || '', s: it.s, c: it.c, r: it.r || '' } }; render(); return; }
     if (a === 'redit') { if (!S.rec[id] || S.rec[id].x) return; sheet = { t: 'rec', id, d: recDraft(id) }; render(); return; }
     if (a === 'rnew') { sheet = { t: 'rec', id: '', d: { n: '', s: S.store, c: 'sonst', k: '4', u: '7', l: H.today(), p: false } }; render(); return; }
@@ -658,6 +669,11 @@
       rd.onerror = () => toast('Datei konnte nicht gelesen werden');
       rd.readAsText(f); return;
     }
+    if (t && t.id === 'nk_d') {
+      if (H.DATE_RE.test(t.value) && t.value >= H.today()) { S.set = Object.assign({}, S.set, { nkN: t.value, m: Date.now() }); save(); t.blur(); nkTick(); render(); }
+      else render();
+      return;
+    }
     if (t && t.id === 'roundsel') { S.set.round = Number(t.value); S.set.m = Date.now(); save(); render(); return; }
     if (t && t.dataset && t.dataset.name != null) {
       const i = Number(t.dataset.name), v = String(t.value || '').trim().slice(0, 20);
@@ -669,6 +685,6 @@
   checkHash();
   render();
   if (!syncOn() && autoClose()) { save(true); render(); }
-  if (syncOn()) syncNow();
+  if (syncOn()) syncNow(); else nkTick();
   window.__HH = { get S() { return S; }, render, addItem, toggle, doc, syncNow };
 })();

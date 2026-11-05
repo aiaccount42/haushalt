@@ -40,6 +40,7 @@
     const n = String(name || '').trim().toLowerCase();
     if (!n) return { c: 'sonst', s: '' };
     const lr = own(learn, n); if (lr && !lr.x) return { c: lr.c, s: lr.s || '' };
+    if (n.includes('backpapier')) return { c: 'papier', s: 'dis' };
     const toks = n.split(/[^a-zäöüß-]+/).filter(Boolean);
     let best = null, bs = 0;
     toks.forEach(t => {
@@ -84,6 +85,19 @@
     const next = addDays(rec.l, rec.e);
     return { next, left: diffDays(next, t || today()) };
   }
+  /* Nachkauf-Tag: alle w Wochen. Ein Artikel kommt in der Runde dran, nach der er bis zur nächsten nicht mehr reichen würde. */
+  const nkDue = (r, date, w) => addDays(r.l, r.e) < addDays(date, 7 * w);
+  const nkPick = (recs, date, w) => recs.filter(r => !r.p && nkDue(r, date, w));
+  function nkNext(r, date, w) { let d = date; for (let i = 0; i < 60 && !nkDue(r, d, w); i++) d = addDays(d, 7 * w); return d; }
+  /* run = letzter fälliger Termin (oder ''), next = erster Termin danach. Verpasste Runden werden zu einer zusammengefasst. */
+  function nkAdvance(date, w, t) {
+    if (date > t) return { run: '', next: date };
+    let d = date; while (addDays(d, 7 * w) <= t) d = addDays(d, 7 * w);
+    return { run: d, next: addDays(d, 7 * w) };
+  }
+  /* Gleiche id auf beiden Geräten, damit ein Artikel nicht doppelt auf der Liste landet. */
+  const nkId = (rid, date) => ('nk' + hash(rid + date).toString(36) + date.replace(/-/g, '').slice(2)).slice(0, 24);
+  function nkFirst(t) { return addDays(t, (6 - toDate(t).getDay() + 7) % 7 || 7); }
   function everyText(e) {
     if (e % 30 === 0 && e >= 30) { const m = e / 30; return m === 1 ? 'jeden Monat' : 'alle ' + m + ' Monate'; }
     if (e % 7 === 0) { const w = e / 7; return w === 1 ? 'jede Woche' : 'alle ' + w + ' Wochen'; }
@@ -101,7 +115,7 @@
   /* ---- Startbestand: gängige Dauerartikel [Name, Laden, Kategorie, Tage] ---- */
   const SEED = [
     ['Toilettenpapier', 'dro', 'papier', 28], ['Küchenrollen', 'dro', 'papier', 28], ['Taschentücher', 'dro', 'papier', 42], ['Müllbeutel', 'dro', 'papier', 42],
-    ['Alufolie', 'dro', 'papier', 90], ['Backpapier', 'dro', 'papier', 90], ['Frischhaltefolie', 'dro', 'papier', 120], ['Gefrierbeutel', 'dro', 'papier', 120],
+    ['Alufolie', 'dro', 'papier', 90], ['Backpapier', 'dis', 'papier', 90], ['Frischhaltefolie', 'dro', 'papier', 120], ['Gefrierbeutel', 'dro', 'papier', 120],
     ['Spülmittel', 'dro', 'reinigung', 42], ['Spülmaschinentabs', 'dro', 'reinigung', 35], ['Geschirrspülsalz', 'dro', 'reinigung', 120], ['Waschmittel', 'dro', 'reinigung', 56],
     ['Weichspüler', 'dro', 'reinigung', 84], ['Allzweckreiniger', 'dro', 'reinigung', 90], ['WC-Reiniger', 'dro', 'reinigung', 60], ['Spülschwämme', 'dro', 'reinigung', 60],
     ['Spültücher', 'dro', 'reinigung', 90], ['Duschgel', 'dro', 'pflege', 42], ['Shampoo', 'dro', 'pflege', 56], ['Handseife', 'dro', 'pflege', 42],
@@ -128,7 +142,7 @@
   /* Alle bekannten Artikel: Vorrat plus das, was ihr schon gekauft habt (fav). Gekauftes hat Vorrang. */
   function known(fav) {
     const out = {};
-    CATALOG.forEach(([n, c]) => { out[n.toLowerCase()] = { key: n.toLowerCase(), n, c, s: guessStore(c, 'dis'), k: 0 }; });
+    CATALOG.forEach(([n, c]) => { out[n.toLowerCase()] = { key: n.toLowerCase(), n, c, s: guess(n).s || guessStore(c, 'dis'), k: 0 }; });
     Object.keys(fav || {}).forEach(key => { const f = fav[key]; if (f && !f.x) out[key] = { key, n: f.n, c: f.c, s: f.s, k: f.k || 0 }; });
     return Object.keys(out).map(k => out[k]);
   }
@@ -353,7 +367,7 @@
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
   /* ---- Fremde Daten prüfen ---- */
-  const ID_RE = /^[a-z0-9]{4,24}$/;
+  const ID_RE = /^[a-z0-9]{4,24}$/, NK_W = [2, 3, 4, 6];
   const str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
   const num = v => typeof v === 'number' && isFinite(v) ? v : 0;
   function cleanRoute(r) {
@@ -409,12 +423,12 @@
       out.mu[k] = { n: str(x.n, 30) || k, a: x.a ? 1 : 0, d: ds, dn: DATE_RE.test(x.dn || '') ? x.dn : '', m: num(x.m) };
     });
     const st = d.set && typeof d.set === 'object' ? d.set : {};
-    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), m: num(st.m) };
+    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', m: num(st.m) };
     return out;
   }
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, nkDue, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);
