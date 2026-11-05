@@ -218,3 +218,4 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 .nkr { padding-right: 10px; }
 .nkr select { flex: none; width: 132px; align-self: center; min-height: 34px; border: 0; background: var(--fill); color: var(--ink); border-radius: 9px; padding: 4px 6px; font: inherit; font-size: 13px; }
 .nkr.done .lt b { color: var(--ink); text-decoration: none; }
+.nkr.done .lt small { display: block; }

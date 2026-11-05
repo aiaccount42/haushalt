@@ -100,6 +100,32 @@
   /* Gleiche id auf beiden Geräten, damit ein Artikel nicht doppelt auf der Liste landet. */
   const nkId = (rid, date) => ('nk' + hash(rid + date).toString(36) + date.replace(/-/g, '').slice(2)).slice(0, 24);
   function nkFirst(t) { return addDays(t, (6 - toDate(t).getDay() + 7) % 7 || 7); }
+  /* Vorkoch: schreibt je Woche { shop, items } nach Firebase. Es zählt die früheste Woche, deren Einkauf noch ansteht. */
+  const VK_A = { 'Obst & Gemüse': 'obst', 'Kühlregal': 'kuehl', 'Tiefkühl': 'tk', 'Konserven': 'vorrat', 'Trockenwaren': 'vorrat', 'Brot': 'brot' };
+  function vkPick(raw, t) {
+    if (!raw || typeof raw !== 'object') return null;
+    const lim = addDays(t, -2), wk = Object.keys(raw).filter(k => DATE_RE.test(k) && raw[k] && DATE_RE.test(raw[k].shop || '') && raw[k].shop >= lim).sort((a, b) => raw[a].shop.localeCompare(raw[b].shop))[0];
+    if (!wk) return null;
+    const list = Array.isArray(raw[wk].items) ? raw[wk].items : Object.values(raw[wk].items || {});
+    const items = list.slice(0, 200).filter(x => x && /^[A-Za-z0-9_-]{1,40}$/.test(x.id || '') && typeof x.n === 'string' && x.n.trim()).map(x => ({ id: x.id, n: x.n.trim().slice(0, 80), q: typeof x.q === 'string' ? x.q.slice(0, 120) : '', s: x.s === 'm' ? 'voll' : 'dis', a: typeof x.a === 'string' ? x.a : '' }));
+    return { week: wk, items };
+  }
+  const vkTag = week => week.replace(/-/g, '').slice(2);
+  const vkId = (week, id) => 'vk' + hash(week + id).toString(36) + vkTag(week);
+  /* Was sich an der Liste ändert. Abgehaktes bleibt, Gelöschtes kommt nicht wieder, was schon offen auf der Liste steht, wird nicht verdoppelt. */
+  function vkPlan(items, doc, learn) {
+    const out = { add: [], up: [], del: [] }, ids = new Set(), tag = vkTag(doc.week), taken = new Set();
+    Object.keys(items).forEach(k => { const i = items[k]; if (!i.x && !i.d) taken.add(i.n.toLowerCase()); });
+    doc.items.forEach(x => {
+      const id = vkId(doc.week, x.id), it = items[id]; ids.add(id);
+      if (it) { if (!it.x && !it.d && it.q !== x.q) out.up.push({ id, q: x.q }); return; }
+      if (taken.has(x.n.toLowerCase())) return;
+      const c = guess(x.n, learn).c;
+      out.add.push({ id, n: x.n, s: x.s, c: c !== 'sonst' ? c : VK_A[x.a] || 'sonst', q: x.q });
+    });
+    Object.keys(items).forEach(k => { const i = items[k]; if (k.indexOf('vk') === 0 && k.endsWith(tag) && !i.x && !i.d && !ids.has(k)) out.del.push(k); });
+    return out;
+  }
   function everyText(e) {
     if (e % 30 === 0 && e >= 30) { const m = e / 30; return m === 1 ? 'jeden Monat' : 'alle ' + m + ' Monate'; }
     if (e % 7 === 0) { const w = e / 7; return w === 1 ? 'jede Woche' : 'alle ' + w + ' Wochen'; }
@@ -425,12 +451,12 @@
       out.mu[k] = { n: str(x.n, 30) || k, a: x.a ? 1 : 0, d: ds, dn: DATE_RE.test(x.dn || '') ? x.dn : '', m: num(x.m) };
     });
     const st = d.set && typeof d.set === 'object' ? d.set : {};
-    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', nkOk: st.nkOk ? 1 : 0, m: num(st.m) };
+    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', nkOk: st.nkOk ? 1 : 0, tkOk: st.tkOk ? 1 : 0, vk: /^[a-z0-9]{8,32}$/.test(st.vk || '') ? st.vk : '', m: num(st.m) };
     return out;
   }
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, KUECHE, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, KUECHE, vkPick, vkPlan, vkId, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);

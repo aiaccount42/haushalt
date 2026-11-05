@@ -221,6 +221,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 .nkr { padding-right: 10px; }
 .nkr select { flex: none; width: 132px; align-self: center; min-height: 34px; border: 0; background: var(--fill); color: var(--ink); border-radius: 9px; padding: 4px 6px; font: inherit; font-size: 13px; }
 .nkr.done .lt b { color: var(--ink); text-decoration: none; }
+.nkr.done .lt small { display: block; }
 
 [hidden] { display: none !important; }
 </style>
@@ -330,6 +331,32 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   /* Gleiche id auf beiden Geräten, damit ein Artikel nicht doppelt auf der Liste landet. */
   const nkId = (rid, date) => ('nk' + hash(rid + date).toString(36) + date.replace(/-/g, '').slice(2)).slice(0, 24);
   function nkFirst(t) { return addDays(t, (6 - toDate(t).getDay() + 7) % 7 || 7); }
+  /* Vorkoch: schreibt je Woche { shop, items } nach Firebase. Es zählt die früheste Woche, deren Einkauf noch ansteht. */
+  const VK_A = { 'Obst & Gemüse': 'obst', 'Kühlregal': 'kuehl', 'Tiefkühl': 'tk', 'Konserven': 'vorrat', 'Trockenwaren': 'vorrat', 'Brot': 'brot' };
+  function vkPick(raw, t) {
+    if (!raw || typeof raw !== 'object') return null;
+    const lim = addDays(t, -2), wk = Object.keys(raw).filter(k => DATE_RE.test(k) && raw[k] && DATE_RE.test(raw[k].shop || '') && raw[k].shop >= lim).sort((a, b) => raw[a].shop.localeCompare(raw[b].shop))[0];
+    if (!wk) return null;
+    const list = Array.isArray(raw[wk].items) ? raw[wk].items : Object.values(raw[wk].items || {});
+    const items = list.slice(0, 200).filter(x => x && /^[A-Za-z0-9_-]{1,40}$/.test(x.id || '') && typeof x.n === 'string' && x.n.trim()).map(x => ({ id: x.id, n: x.n.trim().slice(0, 80), q: typeof x.q === 'string' ? x.q.slice(0, 120) : '', s: x.s === 'm' ? 'voll' : 'dis', a: typeof x.a === 'string' ? x.a : '' }));
+    return { week: wk, items };
+  }
+  const vkTag = week => week.replace(/-/g, '').slice(2);
+  const vkId = (week, id) => 'vk' + hash(week + id).toString(36) + vkTag(week);
+  /* Was sich an der Liste ändert. Abgehaktes bleibt, Gelöschtes kommt nicht wieder, was schon offen auf der Liste steht, wird nicht verdoppelt. */
+  function vkPlan(items, doc, learn) {
+    const out = { add: [], up: [], del: [] }, ids = new Set(), tag = vkTag(doc.week), taken = new Set();
+    Object.keys(items).forEach(k => { const i = items[k]; if (!i.x && !i.d) taken.add(i.n.toLowerCase()); });
+    doc.items.forEach(x => {
+      const id = vkId(doc.week, x.id), it = items[id]; ids.add(id);
+      if (it) { if (!it.x && !it.d && it.q !== x.q) out.up.push({ id, q: x.q }); return; }
+      if (taken.has(x.n.toLowerCase())) return;
+      const c = guess(x.n, learn).c;
+      out.add.push({ id, n: x.n, s: x.s, c: c !== 'sonst' ? c : VK_A[x.a] || 'sonst', q: x.q });
+    });
+    Object.keys(items).forEach(k => { const i = items[k]; if (k.indexOf('vk') === 0 && k.endsWith(tag) && !i.x && !i.d && !ids.has(k)) out.del.push(k); });
+    return out;
+  }
   function everyText(e) {
     if (e % 30 === 0 && e >= 30) { const m = e / 30; return m === 1 ? 'jeden Monat' : 'alle ' + m + ' Monate'; }
     if (e % 7 === 0) { const w = e / 7; return w === 1 ? 'jede Woche' : 'alle ' + w + ' Wochen'; }
@@ -655,13 +682,13 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       out.mu[k] = { n: str(x.n, 30) || k, a: x.a ? 1 : 0, d: ds, dn: DATE_RE.test(x.dn || '') ? x.dn : '', m: num(x.m) };
     });
     const st = d.set && typeof d.set === 'object' ? d.set : {};
-    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', nkOk: st.nkOk ? 1 : 0, m: num(st.m) };
+    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', nkOk: st.nkOk ? 1 : 0, tkOk: st.tkOk ? 1 : 0, vk: /^[a-z0-9]{8,32}$/.test(st.vk || '') ? st.vk : '', m: num(st.m) };
     return out;
   }
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, KUECHE, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, KUECHE, vkPick, vkPlan, vkId, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -677,7 +704,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   let S;
   function fresh() {
     const now = Date.now();
-    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: '0', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), nkW: 4, nkN: '', nkOk: 0, m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
+    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: '0', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), nkW: 4, nkN: '', nkOk: 0, tkOk: 0, vk: '', m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
   }
   function load() {
     try {
@@ -828,6 +855,46 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     Object.keys(tips).forEach((k, i) => { if (seen.has(k)) return; const x = tips[k], g = H.guess(x[0]).s; rows['c' + i] = { rid: '', n: x[0], s: H.KUECHE.includes(k) ? g : x[1], c: x[2], e: x[3], e0: x[3], rc: x[3], on: false }; });
     return rows;
   }
+  /* Aufgaben zur Auswahl: was läuft, plus Startaufgaben und Katalog. */
+  function tkRows() {
+    const seeds = {}, tips = {}, rows = {}, seen = new Set(), sd = H.seedTasks(0, S.set.round);
+    Object.keys(sd).forEach(id => { const x = sd[id]; seeds[x.n.toLowerCase()] = Object.assign({ sid: id }, x); });
+    H.CAT_TK.forEach(x => { const k = x[0].toLowerCase(); if (!seeds[k]) tips[k] = x; });
+    tasks().forEach(t => { const k = t.n.toLowerCase(), s = seeds[k], c = tips[k]; seen.add(k); rows[t.id] = { rid: t.id, n: t.n, e: t.e, e0: t.e, rc: s ? s.e : c ? c[1] : 0, af: t.af || '', on: true }; });
+    Object.keys(seeds).forEach(k => { if (seen.has(k)) return; const s = seeds[k]; rows[s.sid] = { rid: '', n: s.n, e: s.e, e0: s.e, rc: s.e, af: s.af, on: false, seed: { w: s.w, d: s.d, min: s.min, q: s.q, sid: s.sid } }; });
+    Object.keys(tips).forEach((k, i) => { if (seen.has(k)) return; const c = tips[k]; rows['c' + i] = { rid: '', n: c[0], e: c[1], e0: c[1], rc: c[1], af: '', on: false, seed: { w: 2, d: -2, min: c[2], q: '' } }; });
+    return rows;
+  }
+  function tkCommit(rows) {
+    const t0 = H.today(), first = !S.set.tkOk, off = new Set(Object.keys(rows).filter(k => rows[k].rid && !rows[k].on));
+    Object.keys(rows).forEach(k => {
+      const r = rows[k];
+      if (r.rid && !r.on) { kill(S.tk, r.rid); return; }
+      if (r.rid) { const p = {}; if (r.e !== r.e0) p.e = r.e; if (first && !r.af) p.l = t0; if (r.af && off.has(r.af)) Object.assign(p, { af: '', e: r.e || 7, d: -2, l: t0, t: '' }); if (Object.keys(p).length) putTk(r.rid, p); return; }
+      if (!r.on) return;
+      const af = r.af && S.tk[r.af] && !S.tk[r.af].x && !off.has(r.af) ? r.af : '', sd = r.seed;
+      putTk(sd.sid || H.uid(), { n: r.n, w: sd.w, e: af ? 0 : r.e || 7, d: af ? -1 : sd.d, min: sd.min, l: t0, lw: -1, t: '', af, q: sd.q, p: 0, chk: 0 });
+    });
+    S.set = Object.assign({}, S.set, { tkOk: 1, m: Date.now() });
+    toast('Auswahl gespeichert');
+  }
+  /* Vorkoch-Wochenliste holen: läuft von selbst, höchstens einmal pro Minute. */
+  let vkAt = 0, vkMsg = '';
+  async function vkPull(force) {
+    if (!syncOn() || !S.set.vk || (!force && Date.now() - vkAt < 60000)) return;
+    vkAt = Date.now();
+    try {
+      const d = H.vkPick(await jfetch(S.sync.url + '/vorkoch/' + S.set.vk + '-einkauf.json'), H.today());
+      if (!d) { vkMsg = 'Noch keine Wochenliste von Vorkoch.'; return; }
+      if (typing()) { vkAt = 0; return; }
+      const p = H.vkPlan(S.items, d, S.lrn);
+      p.add.forEach(x => putItem(x.id, { n: x.n, s: x.s, c: x.c, q: x.q, b: S.me, d: 0, r: '' }));
+      p.up.forEach(x => putItem(x.id, { q: x.q }));
+      p.del.forEach(k => kill(S.items, k));
+      vkMsg = 'Abgeglichen: ' + d.items.length + ' Artikel für den Einkauf.';
+      if (p.add.length || p.up.length || p.del.length) { save(); render(); if (p.add.length) toast(p.add.length + ' Artikel von Vorkoch auf der Liste'); }
+    } catch (e) { vkMsg = 'Vorkoch nicht erreichbar.'; }
+  }
   function purgeDone(st) {
     let n = 0;
     items().forEach(i => { if (i.d && i.s === st) { kill(S.items, i.id); n++; } });
@@ -870,7 +937,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       if (autoClose()) { save(); render(); }
     } catch (err) { setSs('err', err && err.message ? err.message : 'Abgleich fehlgeschlagen.'); }
     syncing = false;
-    nkTick();
+    nkTick(); vkPull();
     if (again) { again = false; schedSync(); }
   }
   setInterval(() => { try { if (document.visibilityState !== 'hidden') syncNow(); } catch (e) { /* egal */ } }, 20000);
@@ -886,6 +953,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (d && normUrl(d.u) && /^[a-z0-9]{8,32}$/.test(d.c || '')) { sheet = { t: 'join', u: normUrl(d.u), c: d.c }; S.tab = 'more'; }
   }
   function newCode() { const cs = 'abcdefghijkmnpqrstuvwxyz23456789'; let o = ''; try { const a = new Uint8Array(14); crypto.getRandomValues(a); a.forEach(x => { o += cs[x % cs.length]; }); } catch (e) { for (let i = 0; i < 14; i++) o += cs[Math.floor(Math.random() * cs.length)]; } return o; }
+  function vkLocal() { try { const v = JSON.parse(localStorage.getItem('vorkoch.v1') || 'null'); return v && v.sync && normUrl(v.sync.url) === S.sync.url && v.sync.code || ''; } catch (e) { return ''; } }
   function vorkochUrl() { try { const v = JSON.parse(localStorage.getItem('vorkoch.v1') || 'null'); return v && v.sync && normUrl(v.sync.url) || ''; } catch (e) { return ''; } }
 
   /* ---------- Ansichten ---------- */
@@ -894,7 +962,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     return '<div class="seg" role="group" aria-label="Laden">' + H.STORES.map(([k, l]) => '<button type="button" data-act="store" data-s="' + k + '" aria-pressed="' + (S.store === k) + '">' + esc(l) + '<i>' + open.filter(i => i.s === k).length + '</i></button>').join('') + '</div>';
   }
   function itemRow(i) {
-    const sub = [i.q, i.b !== S.me && !i.r ? 'von ' + names()[i.b] : '', i.r ? 'Nachkauf' : ''].filter(Boolean).join(' · ');
+    const vk = i.id.indexOf('vk') === 0, sub = [i.q, i.b !== S.me && !i.r && !vk ? 'von ' + names()[i.b] : '', i.r ? 'Nachkauf' : '', vk ? 'Vorkoch' : ''].filter(Boolean).join(' · ');
     return '<div class="li' + (i.d ? ' done' : '') + '"><button type="button" class="chk" data-act="tog" data-id="' + i.id + '" aria-label="' + esc(i.n) + (i.d ? ' wieder auf die Liste' : ' abhaken') + '"><span class="box"></span></button>' +
       '<button type="button" class="lt" data-act="edit" data-id="' + i.id + '"><b>' + esc(i.n) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</button></div>';
   }
@@ -939,6 +1007,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (mp.length) h += '<p class="cap">Müll</p><div class="grp">' + mp.map(muRow).join('') + '</div>';
     const nk = nkOpen().length;
     if (nk) h += '<p class="cap">Einkauf</p><div class="grp"><button type="button" class="row chev" data-act="tab" data-tab="list"><span class="grow"><b>Nachkauf einkaufen</b></span><span class="val">' + nk + ' Artikel</span></button></div>';
+    if (!S.set.tkOk) return h + '<div class="empty">Wähle zuerst aus, was bei euch anfällt und wie oft. Bis dahin läuft nur der Müllkalender.</div><div class="actions"><button type="button" class="btn" data-act="tkpick">Aufgaben auswählen</button></div>';
     if (all.some(t => t.chk)) h += '<div class="note due" style="margin-top:12px"><b>Müll-Termine prüfen</b><span>Abstand und Wochentag der Müllaufgaben sind Platzhalter. Gleicht sie mit eurem Müllkalender ab (Aufgabe antippen).</span><button type="button" class="btn sm" data-act="chkok">Passt so</button></div>';
     if (heute.length) h += '<p class="cap">Heute</p><div class="grp">' + heute.map(taskRow).join('') + '</div>';
     else h += '<div class="empty">Heute ist nichts fällig.</div>';
@@ -953,7 +1022,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         });
       }
     }
-    h += '<div class="actions"><button type="button" class="btn gray" data-act="tnew">Neue Aufgabe</button><button type="button" class="btn gray" data-act="tmore">Weitere Aufgaben · ' + rest + '</button></div>';
+    h += '<div class="actions"><button type="button" class="btn gray" data-act="tnew">Neue Aufgabe</button><button type="button" class="btn gray" data-act="tmore">Weitere Aufgaben · ' + rest + '</button><button type="button" class="btn gray" data-act="tkpick">Aufgaben auswählen</button></div>';
     return h;
   }
   function viewHist() {
@@ -1018,6 +1087,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         names().map((n, i) => '<div class="frow"><label for="nm' + i + '">Name ' + (i + 1) + '</label><input type="text" id="nm' + i + '" data-name="' + i + '" value="' + esc(n) + '" maxlength="20" autocapitalize="words"></div>').join('') + '</div>';
       h += '<p class="cap">Haushaltsrunde</p><div class="grp"><div class="frow"><label for="roundsel">Tag der Runde</label><select id="roundsel">' + [1, 2, 3, 4, 5, 6, 0].map(i => '<option value="' + i + '"' + (S.set.round === i ? ' selected' : '') + '>' + H.WDL[i] + '</option>').join('') + '</select></div></div>';
       h += '<p class="cap">Abgleich zwischen den Geräten</p><div class="grp"><div class="pad" id="syncbox">' + syncBox() + '</div></div>';
+      h += '<p class="cap">Einkauf aus Vorkoch</p><div class="grp"><div class="pad">' + (S.set.vk ? '<p class="sub" style="margin-bottom:10px">Verbunden. Die Wochenliste kommt von selbst auf die Liste.' + (vkMsg ? ' ' + esc(vkMsg) : '') + '</p><div class="actions" style="margin:0"><button type="button" class="btn sm gray" data-act="vkoff">Trennen</button></div>' :
+        !syncOn() ? '<p class="sub">Richte zuerst den Abgleich oben ein.</p>' : '<p class="sub" style="margin-bottom:10px">Füge den Einladungslink aus Vorkoch ein (Vorkoch, Mehr, Abgleich).</p><div class="flex"><input type="text" id="vklink" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Einladungslink" aria-label="Einladungslink aus Vorkoch" value="' + esc(vkLocal()) + '"><button type="button" class="btn sm" data-act="vkon">Verbinden</button></div>' + (vkMsg ? '<p class="alert">' + esc(vkMsg) + '</p>' : '')) + '</div></div>';
       h += '<p class="cap">Laufweg im Laden</p>';
       H.STORES.forEach(([k, l, long]) => {
         const rop = !!S.open[k];
@@ -1029,7 +1100,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         h += '</div>';
       });
     }
-    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 13</p>';
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 14</p>';
     return h;
   }
 
@@ -1055,13 +1126,17 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         '<p class="foot">Er kommt am Nachkauf-Tag auf die Liste, wenn er bis zum nächsten nicht mehr reicht. Pausiert heißt: Er kommt nicht von selbst.</p>',
         '<div class="actions">' + (sheet.id ? (onList(sheet.id) ? '' : '<button type="button" class="btn soft" data-act="rlist">Jetzt auf die Liste</button>') + '<button type="button" class="btn soft" data-act="rbought">Gerade gekauft</button><button type="button" class="btn danger" data-act="rdel">Löschen</button>' : '') + '</div>');
     }
-    if (sheet.t === 'nkpick') {
-      const rows = sheet.d.rows, keys = Object.keys(rows), n = keys.filter(k => rows[k].on).length;
-      const opts = r => Array.from(new Set([14, 21, 28, 42, 56, 84, 120, 180].concat(r.e, r.rc || []))).sort((a, b) => a - b).map(v => '<option value="' + v + '"' + (v === r.e ? ' selected' : '') + '>' + (v === r.rc ? '★ ' : '') + esc(H.everyText(v)) + '</option>').join('');
-      const row = k => { const r = rows[k]; return '<div class="li nkr' + (r.on ? ' done pk' : '') + '"><button type="button" class="chk" data-act="nktog" data-k="' + esc(k) + '" aria-label="' + esc(r.n) + (r.on ? ' abwählen' : ' auswählen') + '"><span class="box"></span></button><button type="button" class="lt" data-act="nktog" data-k="' + esc(k) + '"><b>' + esc(r.n) + '</b></button>' + (r.on ? '<select data-nke="' + esc(k) + '" aria-label="Wie oft: ' + esc(r.n) + '">' + opts(r) + '</select>' : '') + '</div>'; };
-      let b = '<div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:6px"><span class="sub">' + n + ' von ' + keys.length + ' ausgewählt · ★ Empfehlung</span><button type="button" class="lnk" data-act="nkall">Alle abwählen</button></div>';
-      H.STORES.forEach(([k, l]) => { const g = keys.filter(x => rows[x].s === k).sort((x, y) => rows[x].n.localeCompare(rows[y].n, 'de')); if (g.length) b += '<p class="cap">' + esc(l) + '</p><div class="grp">' + g.map(row).join('') + '</div>'; });
-      return shell('Artikel auswählen', b, '<div class="actions"><button type="button" class="btn" data-act="done">' + (S.set.nkOk ? 'Übernehmen' : 'Übernehmen und starten') + '</button></div>');
+    if (sheet.t === 'nkpick' || sheet.t === 'tkpick') {
+      const tk = sheet.t === 'tkpick', rows = sheet.d.rows, keys = Object.keys(rows), n = keys.filter(k => rows[k].on).length, byN = (x, y) => rows[x].n.localeCompare(rows[y].n, 'de');
+      const base = tk ? [1, 2, 3, 7, 14, 21, 28, 42, 60, 90, 180, 365] : [14, 21, 28, 42, 56, 84, 120, 180];
+      const opts = r => Array.from(new Set(base.concat(r.e, r.rc || []))).sort((a, b) => a - b).map(v => '<option value="' + v + '"' + (v === r.e ? ' selected' : '') + '>' + (v === r.rc ? '★ ' : '') + esc(H.everyText(v)) + '</option>').join('');
+      const nm = id => (S.tk[id] && S.tk[id].n) || (rows[id] && rows[id].n) || '';
+      const row = k => { const r = rows[k]; return '<div class="li nkr' + (r.on ? ' done pk' : '') + '"><button type="button" class="chk" data-act="nktog" data-k="' + esc(k) + '" aria-label="' + esc(r.n) + (r.on ? ' abwählen' : ' auswählen') + '"><span class="box"></span></button><button type="button" class="lt" data-act="nktog" data-k="' + esc(k) + '"><b>' + esc(r.n) + '</b>' + (r.af ? '<small>folgt auf ' + esc(nm(r.af)) + '</small>' : '') + '</button>' + (r.on && !r.af ? '<select data-nke="' + esc(k) + '" aria-label="Wie oft: ' + esc(r.n) + '">' + opts(r) + '</select>' : '') + '</div>'; };
+      let b = '<div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:6px"><span class="sub">' + n + ' von ' + keys.length + ' · ★ Empfehlung</span><button type="button" class="lnk" data-act="nkall">Alle abwählen</button></div>';
+      const grp = (t, l) => l.length ? '<p class="cap">' + esc(t) + '</p><div class="grp">' + l.sort(byN).map(row).join('') + '</div>' : '';
+      if (tk) b += grp('Dabei', keys.filter(k => rows[k].rid)) + grp('Weitere Vorschläge', keys.filter(k => !rows[k].rid));
+      else H.STORES.forEach(([k, l]) => { b += grp(l, keys.filter(x => rows[x].s === k)); });
+      return shell(tk ? 'Aufgaben auswählen' : 'Artikel auswählen', b, '<div class="actions"><button type="button" class="btn" data-act="done">' + ((tk ? S.set.tkOk : S.set.nkOk) ? 'Übernehmen' : 'Übernehmen und starten') + '</button></div>');
     }
     if (sheet.t === 'tcard') {
       const t = S.tk[sheet.id]; if (!t || t.x) return '';
@@ -1078,7 +1153,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       const sec = (title, l, f) => l.length ? '<p class="cap">' + title + '</p><div class="grp">' + l.map(t => row(t, f(t))).join('') + '</div>' : '';
       return shell('Weitere Aufgaben', sec('Später', later, t => H.fmtDay(H.toDate(t.next).getTime()) + ' · ' + H.everyText(t.e)) +
         sec('Folgt nach', wait, t => S.tk[t.af] && !S.tk[t.af].x ? S.tk[t.af].n : '') + sec('Pausiert', pause, () => ''),
-        '<div class="actions"><button type="button" class="btn gray" data-act="cattk">Aus dem Katalog</button><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>');
+        '<div class="actions"><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>');
     }
     if (sheet.t === 'mu') {
       const t0 = H.today(), l = mus().map(r => Object.assign({}, r, { next: H.muNext(r, t0) })).sort((a, b) => (a.next || '9').localeCompare(b.next || '9'));
@@ -1099,13 +1174,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         '<p class="cap">Dauer und Standard</p><div class="grp"><div class="frow"><label for="t_m">Dauer in Minuten</label><input type="number" id="t_m" inputmode="numeric" min="0" max="240" value="' + esc(d.min) + '"></div><div class="frow col"><input type="text" id="t_q" value="' + esc(d.q) + '" maxlength="120" placeholder="Wann ist es gut genug? (Mindeststandard)" aria-label="Mindeststandard"></div>' +
         '<div class="frow"><span class="lb">Pausiert</span><label class="sw"><input type="checkbox" id="t_p"' + (d.p ? ' checked' : '') + ' aria-label="Pausiert"><i></i></label></div></div>',
         '<div class="actions">' + (sheet.id ? '<button type="button" class="btn soft" data-act="tnow">Jetzt erledigt</button><button type="button" class="btn danger" data-act="tdelt">Löschen</button>' : '') + '</div>');
-    }
-    if (sheet.t === 'cat') {
-      const list = H.CAT_TK, have = new Set(tasks().map(x => x.n.toLowerCase()));
-      return shell('Aufgaben-Katalog', '<p class="foot" style="margin:0 2px 10px">Richtwerte aus gängigen Empfehlungen. Nach dem Hinzufügen kannst du Rhythmus und Details ändern.</p><div class="grp">' + list.map((x, i) => {
-        const n = x[0], e = x[1], why = x[3], has = have.has(n.toLowerCase());
-        return '<div class="li padl"><div class="lt"><b>' + esc(n) + '</b><small>' + esc(H.everyText(e)) + (why ? ' · ' + esc(why) : '') + '</small></div>' + (has ? '<span class="sub" style="padding-right:14px">dabei</span>' : '<button type="button" class="btn sm soft" style="margin-right:12px" data-act="catadd" data-i="' + i + '">Hinzufügen</button>') + '</div>';
-      }).join('') + '</div>', '');
     }
     if (sheet.t === 'plan') {
       const t0 = H.today(), who = i => i === 0 || i === 1 ? ' (' + names()[i] + ')' : '';
@@ -1175,6 +1243,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       const l = H.DATE_RE.test(d.l) && d.l <= H.today() ? d.l : H.today();
       const old = S.tk[id] && !S.tk[id].x ? S.tk[id] : null;
       putTk(id, { n, w: d.w, e, d: d.af ? -1 : Number(d.d), min: Math.max(0, Math.min(240, Math.round(Number(d.min)) || 0)), l, lw: old ? old.lw : -1, t: old ? old.t : '', af: d.af || '', q: d.q.trim(), p: d.p ? 1 : 0, chk: 0 });
+    } else if (sheet.t === 'tkpick') {
+      tkCommit(d.rows);
     } else if (sheet.t === 'nkpick') {
       Object.keys(d.rows).forEach(k => {
         const r = d.rows[k], fresh = H.addDays(H.today(), -r.e);
@@ -1200,8 +1270,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   function leaveSheet() {
     if (!sheet) return true;
     readSheet();
-    const edit = ['item', 'rec', 'task', 'nkpick'].includes(sheet.t);
-    if (!edit || JSON.stringify(sheet.d) === sheet.o || (!sheet.id && sheet.t !== 'nkpick' && !sheet.d.n.trim())) { sheet = null; return true; }
+    const edit = ['item', 'rec', 'task', 'nkpick', 'tkpick'].includes(sheet.t);
+    if (!edit || JSON.stringify(sheet.d) === sheet.o || (!sheet.id && !sheet.d.n.trim())) { sheet = null; return true; }
     if (!saveSheet()) return false;
     sheet = null; save(); nkTick(); return true;
   }
@@ -1227,7 +1297,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       main.innerHTML = '<div class="view">' + (S.tab === 'list' ? viewList() : S.tab === 'rec' ? viewRec() : S.tab === 'tasks' ? viewTasks() : S.tab === 'hist' ? viewHist() : viewMore()) + '</div>';
       main.dataset.tab = S.tab;
     }
-    const oldShb = $('sheetc').querySelector('.shb'), keepTop = oldShb && sheet && ['pick', 'nkpick'].includes(sheet.t) ? oldShb.scrollTop : 0;
+    const oldShb = $('sheetc').querySelector('.shb'), keepTop = oldShb && sheet && ['pick', 'nkpick', 'tkpick'].includes(sheet.t) ? oldShb.scrollTop : 0;
     $('sheetc').innerHTML = sheetHtml();
     if (keepTop) { const nb = $('sheetc').querySelector('.shb'); if (nb) nb.scrollTop = keepTop; }
     document.body.classList.toggle('lock', !!sheet);
@@ -1236,7 +1306,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   }
   function updateTabs() {
     document.querySelectorAll('#tabs [data-tab]').forEach(b => { if (b.dataset.tab === (S.tab === 'hist' ? 'more' : S.tab)) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    const tn = taskDue(String(S.me)).length + muPending().length + (nkOpen().length ? 1 : 0), tb = $('tbadge');
+    const tn = (S.set.tkOk ? taskDue(String(S.me)).length : 0) + muPending().length + (nkOpen().length ? 1 : 0), tb = $('tbadge');
     if (tb) { tb.hidden = !tn; tb.textContent = tn; }
   }
 
@@ -1256,16 +1326,18 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (a === 'tcdone') { const tid = sheet.id; sheet = null; doneTask(tid); return; }
     if (a === 'tmore') { sheet = { t: 'tmore', d: {} }; render(); return; }
     if (a === 'mu') { sheet = { t: 'mu', d: {} }; render(); return; }
-    if (a === 'cattk') { sheet = { t: 'cat', k: 'tk', d: {} }; render(); return; }
+    if (a === 'tkpick') { sheet = { t: 'tkpick', id: 'tk', d: { rows: tkRows() } }; render(); return; }
+    if (a === 'vkon') {
+      const v = (($('vklink') || {}).value || '').trim(), m = /#j=([A-Za-z0-9_-]+)/.exec(v), d = m ? b64d(m[1]) : null, code = d ? d.c : v;
+      if (d && normUrl(d.u) !== S.sync.url) { vkMsg = 'Das ist eine andere Datenbank als die von Haushalt.'; render(); return; }
+      if (!/^[a-z0-9]{8,32}$/.test(code || '')) { vkMsg = 'Das ist kein Einladungslink aus Vorkoch.'; render(); return; }
+      vkMsg = ''; S.set = Object.assign({}, S.set, { vk: code, m: Date.now() }); save(); render(); vkPull(true); return;
+    }
+    if (a === 'vkoff') { if (!window.confirm('Verbindung zu Vorkoch trennen?')) return; vkMsg = ''; S.set = Object.assign({}, S.set, { vk: '', m: Date.now() }); save(); render(); return; }
     if (a === 'nkpick') { sheet = { t: 'nkpick', id: 'nk', d: { rows: nkRows() } }; render(); return; }
     if (a === 'nktog') { const r = sheet.d.rows[t.dataset.k]; if (r) { r.on = !r.on; render(); } return; }
     if (a === 'nkall') { Object.values(sheet.d.rows).forEach(r => { r.on = false; }); render(); return; }
     if (a === 'plan') { sheet = { t: 'plan', d: {} }; render(); return; }
-    if (a === 'catadd') {
-      const i = Number(t.dataset.i), sc = $('sheetc').querySelector('.shb'), top = sc ? sc.scrollTop : 0;
-      { const x = H.CAT_TK[i]; if (x) putTk(H.uid(), { n: x[0], w: 2, e: x[1], d: -2, min: x[2], l: H.today(), lw: -1, t: '', af: '', q: '', p: 0, chk: 0 }); }
-      save(); render(); const n = $('sheetc').querySelector('.shb'); if (n) n.scrollTop = top; return;
-    }
     if (a === 'wiki') { sheet = { t: 'wiki', d: {} }; render(); return; }
     if (a === 'wtog') { const k = 'w' + t.dataset.i; S.open[k] = !S.open[k]; render(); return; }
     if (a === 'tnew') { sheet = { t: 'task', id: '', d: { n: '', w: 2, k: '1', u: '7', d: '-2', l: H.today(), min: '15', af: '', q: '', p: false } }; render(); return; }
@@ -1363,7 +1435,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       rd.onerror = () => toast('Datei konnte nicht gelesen werden');
       rd.readAsText(f); return;
     }
-    if (t && t.dataset && t.dataset.nke != null && sheet && sheet.t === 'nkpick') { const r = sheet.d.rows[t.dataset.nke]; if (r) r.e = Number(t.value); return; }
+    if (t && t.dataset && t.dataset.nke != null && sheet && sheet.d && sheet.d.rows) { const r = sheet.d.rows[t.dataset.nke]; if (r) r.e = Number(t.value); return; }
     if (t && t.id === 'nk_d') {
       if (H.DATE_RE.test(t.value) && t.value >= H.today()) { S.set = Object.assign({}, S.set, { nkN: t.value, m: Date.now() }); save(); t.blur(); nkTick(); render(); }
       else render();
