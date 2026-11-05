@@ -62,4 +62,10 @@ eq(H.cleanDoc({ v: 1, set: { round: 9 } }).set.round, 4, 'round default'); eq(H.
   const key = Object.keys(mu).find(k => mu[k].n.startsWith('Sperrm')); eq(!!key && mu[key].a === 0 && mu[key].d[0] === '2028-01-10', true, 'neue Art, Info');
   eq(H.merge({ mu: mu }, { mu: {} }, 10).mu.restabfall.m, 5, 'merge mu');
 }
+// Härtung
+const P = H.cleanDoc(JSON.parse('{"v":1,"fav":{"__proto__":{"n":"x","m":1},"milch":{"n":"Milch","m":1}},"lrn":{"__proto__":{"c":"tk","m":1}}}'));
+eq(Object.keys(P.fav), ['milch'], 'proto in fav raus'); eq(Object.getPrototypeOf(P.fav) === Object.prototype && Object.getPrototypeOf(P.lrn) === Object.prototype, true, 'prototyp unverändert');
+eq(H.merge({ fav: { constructor: { n: 'K', m: 5 } }, set: {} }, { fav: {}, set: {} }, 10).fav.constructor.n, 'K', 'geerbter schlüssel stört merge nicht');
+eq(H.guess('constructor', {}).c, 'sonst', 'geerbter schlüssel stört guess nicht'); eq(H.own({}, 'constructor'), undefined, 'own ignoriert geerbtes'); eq(H.own({ a: 1 }, 'a'), 1, 'own eigenes');
+{ const m = {}; H.muImport(m, { 'Müll': ['2028-01-04'] }, 5); const id = Object.keys(m)[0]; eq(/^[a-z0-9]{4,24}$/.test(id), true, 'kurzer Name gibt gültige id'); eq(!!H.cleanDoc({ v: 1, mu: m }).mu[id], true, 'übersteht Prüfung'); }
 console.log(n - bad, '/', n, 'ok'); process.exit(bad ? 1 : 0);

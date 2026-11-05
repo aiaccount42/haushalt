@@ -48,6 +48,10 @@
   function putItem(id, o) { S.items[id] = Object.assign({}, S.items[id] || {}, o, { m: Date.now() }); }
   function putRec(id, o) { S.rec[id] = Object.assign({}, S.rec[id] || {}, o, { m: Date.now() }); }
   const kill = (map, id) => { map[id] = { x: 1, m: Date.now() }; };
+  function killUndo(map, id, msg) {
+    const snap = map[id]; kill(map, id); sheet = null; save(); render();
+    toast(msg, () => { map[id] = Object.assign({}, snap, { m: Date.now() }); save(); render(); });
+  }
   const dueRecs = () => recs().filter(r => !r.p && H.due(r).left <= 0 && !onList(r.id));
 
   /* ---------- Aktionen ---------- */
@@ -63,9 +67,10 @@
     if (!n) return;
     const dup = items().find(i => !i.d && i.n.toLowerCase() === n.toLowerCase());
     if (dup) { toast('„' + dup.n + '“ steht schon auf der Liste (' + H.SNAME[dup.s] + ')'); return; }
-    const fv = S.fav[n.toLowerCase().slice(0, 60)];
+    const fv = H.own(S.fav, n.toLowerCase().slice(0, 60));
     const g = forced ? { c: forced.c, s: forced.s } : fv && !fv.x ? { c: fv.c, s: fv.s } : H.guess(n, S.lrn), s = g.s || H.guessStore(g.c, S.store);
-    putItem(H.uid(), { n, s, c: g.c, q: '', b: S.me, d: 0, r: '' });
+    const rc = recs().find(r => r.n.toLowerCase() === n.toLowerCase());
+    putItem(H.uid(), { n, s, c: g.c, q: '', b: S.me, d: 0, r: rc ? rc.id : '' });
     if (s !== S.store) toast('„' + n + '“ → ' + H.SNAME[s] + ' · ' + H.CNAME[g.c]);
     save(); render();
   }
@@ -88,7 +93,7 @@
     ids.forEach(k => kill(S.items, k));
     const left = items().filter(i => !i.d && i.s === st).length;
     save(); render();
-    toast('Einkauf gespeichert · ' + done.length + (done.length === 1 ? ' Artikel' : ' Artikel') + (left ? ', ' + left + ' noch offen' : ''), () => { kill(S.trips, id); ids.forEach((k, j) => { S.items[k] = Object.assign({}, snap[j], { m: Date.now() }); }); save(); render(); });
+    toast('Einkauf gespeichert · ' + done.length + ' Artikel' + (left ? ', ' + left + ' noch offen' : ''), () => { kill(S.trips, id); ids.forEach((k, j) => { S.items[k] = Object.assign({}, snap[j], { m: Date.now() }); }); save(); render(); });
   }
   /* Vergessenes Abhaken: Erledigtes, das älter als 2 Tage ist, wird als Einkauf verbucht (Zeitpunkt = letztes Abhaken). */
   function autoClose() {
@@ -127,7 +132,7 @@
   const taskDue = f => tasks().map(withInfo).filter(t => t.left !== null && t.left <= 0 && (f === 'all' || whoTask(t) === Number(f)));
   const tripsList = () => Object.keys(S.trips).filter(k => !S.trips[k].x).map(k => Object.assign({ id: k }, S.trips[k])).sort((a, b) => b.t - a.t);
   function favBump(it, delta) {
-    const key = it.n.toLowerCase().slice(0, 60), old = S.fav[key];
+    const key = it.n.toLowerCase().slice(0, 60), old = H.own(S.fav, key);
     S.fav[key] = { n: it.n, c: it.c, s: it.s, k: Math.max(0, ((old && !old.x ? old.k : 0) || 0) + delta), m: Date.now() };
   }
   const openNames = () => new Set(items().filter(i => !i.d).map(i => i.n.toLowerCase().slice(0, 60)));
@@ -286,7 +291,7 @@
     keys.slice(0, 12).forEach(m => {
       const g = ts.filter(x => H.monday(x.t) === m);
       h += '<p class="cap">KW ' + H.kw(m) + ' · ' + H.fmtRange(m) + ' · ' + g.length + (g.length === 1 ? ' Einkauf' : ' Einkäufe') + '</p><div class="grp">' + g.map(x =>
-        '<div class="li padl"><button type="button" class="lt" data-act="tview" data-id="' + x.id + '"><b>' + esc(H.fmtDay(x.t)) + ', ' + esc(H.fmtTime(x.t)) + ' · ' + esc(H.SNAME[x.s]) + '</b><small>' + x.n + (x.n === 1 ? ' Artikel' : ' Artikel') + ' · ' + esc(names()[x.b]) + '</small></button></div>').join('') + '</div>';
+        '<div class="li padl"><button type="button" class="lt" data-act="tview" data-id="' + x.id + '"><b>' + esc(H.fmtDay(x.t)) + ', ' + esc(H.fmtTime(x.t)) + ' · ' + esc(H.SNAME[x.s]) + '</b><small>' + x.n + ' Artikel · ' + esc(names()[x.b]) + '</small></button></div>').join('') + '</div>';
     });
     return h;
   }
@@ -338,7 +343,7 @@
       }
       h += '</div>';
     });
-    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 9</p>';
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version __VERSION__</p>';
     return h;
   }
 
@@ -465,6 +470,15 @@
     }
     return true;
   }
+  /* Dialog verlassen, ohne „Fertig“: Änderungen bleiben erhalten, unberührte Einträge werden nicht neu gestempelt. */
+  function leaveSheet() {
+    if (!sheet) return true;
+    readSheet();
+    const edit = ['item', 'rec', 'task'].includes(sheet.t);
+    if (!edit || JSON.stringify(sheet.d) === sheet.o || (!sheet.id && !sheet.d.n.trim())) { sheet = null; return true; }
+    if (!saveSheet()) return false;
+    sheet = null; save(); return true;
+  }
   function taskDraft(id) {
     const t = S.tk[id], e = t.e || 7, u = e % 30 === 0 ? '30' : e % 7 === 0 ? '7' : '1';
     return { n: t.n, w: t.w, k: String(e / Number(u)), u, d: String(t.d), l: t.l, min: String(t.min), af: t.af || '', q: t.q || '', p: !!t.p };
@@ -478,6 +492,7 @@
   /* ---------- Darstellung ---------- */
   function render() {
     readSheet();
+    if (sheet && sheet.d && sheet.o === undefined) sheet.o = JSON.stringify(sheet.d);
     const main = $('main'), sc = window.scrollY;
     if (S.tab === 'list' && main.dataset.tab === 'list' && $('lbody')) {
       const all = items(), open = all.filter(i => !i.d);
@@ -504,7 +519,7 @@
   /* ---------- Ereignisse ---------- */
   function act(a, t) {
     const id = t.dataset.id, st = t.dataset.s;
-    if (a === 'tab') { $('toast').hidden = true; readSheet(); S.tab = t.dataset.tab; sheet = null; save(true); render(); window.scrollTo(0, 0); return; }
+    if (a === 'tab') { if (!leaveSheet()) return; $('toast').hidden = true; S.tab = t.dataset.tab; save(true); render(); window.scrollTo(0, 0); return; }
     if (a === 'store') { S.store = st; save(true); render(); return; }
     if (a === 'tog') { toggle(id); return; }
     if (a === 'tdone') { doneTask(id); return; }
@@ -527,10 +542,15 @@
     if (a === 'tnew') { sheet = { t: 'task', id: '', d: { n: '', w: 2, k: '1', u: '7', d: '-2', l: H.today(), min: '15', af: '', q: '', p: false } }; render(); return; }
     if (a === 'tw') { readSheet(); sheet.d.w = Number(t.dataset.v); render(); return; }
     if (a === 'tnow') { const sid = sheet.id; if (!saveSheet()) return; sheet = null; doneTask(sid); return; }
-    if (a === 'tdelt') { kill(S.tk, sheet.id); tasks().forEach(x => { if (x.af === sheet.id) putTk(x.id, { af: '', e: 7, d: -2 }); }); sheet = null; save(); render(); toast('Aufgabe gelöscht'); return; }
+    if (a === 'tdelt') {
+      const tid = sheet.id, snap = S.tk[tid], foll = tasks().filter(x => x.af === tid).map(x => [x.id, S.tk[x.id]]);
+      kill(S.tk, tid); foll.forEach(([k]) => putTk(k, { af: '', e: 7, d: -2 })); sheet = null; save(); render();
+      toast('Aufgabe gelöscht', () => { S.tk[tid] = Object.assign({}, snap, { m: Date.now() }); foll.forEach(([k, v]) => { S.tk[k] = Object.assign({}, v, { m: Date.now() }); }); save(); render(); });
+      return;
+    }
     if (a === 'finish') { closeTrip(S.store); return; }
     if (a === 'tview') { sheet = { t: 'trip', id }; render(); return; }
-    if (a === 'tdel') { kill(S.trips, sheet.id); sheet = null; save(); render(); toast('Einkauf gelöscht'); return; }
+    if (a === 'tdel') { killUndo(S.trips, sheet.id, 'Einkauf gelöscht'); return; }
     if (a === 'pick') { sheet = { t: 'pick' }; render(); return; }
     if (a === 'qadd' || a === 'sadd') { const e = entryFor(t.dataset.k); if (e) { addItem(e.n, { s: e.s, c: e.c }); if (a === 'sadd') { const i = $('addin'); if (i) { i.value = ''; i.focus(); } updateSugg(); } } return; }
     if (a === 'ptog') {
@@ -546,10 +566,10 @@
     if (a === 'edit') { const it = S.items[id]; if (!it || it.x) return; sheet = { t: 'item', id, d: { n: it.n, q: it.q || '', s: it.s, c: it.c, r: it.r || '' } }; render(); return; }
     if (a === 'redit') { if (!S.rec[id] || S.rec[id].x) return; sheet = { t: 'rec', id, d: recDraft(id) }; render(); return; }
     if (a === 'rnew') { sheet = { t: 'rec', id: '', d: { n: '', s: S.store, c: 'sonst', k: '4', u: '7', l: H.today(), p: false } }; render(); return; }
-    if (a === 'close') { sheet = null; render(); return; }
+    if (a === 'close') { if (leaveSheet()) render(); return; }
     if (a === 'done') { if (saveSheet()) { sheet = null; save(); render(); } return; }
     if (a === 'fs' || a === 'rs') { readSheet(); sheet.d.s = st; render(); return; }
-    if (a === 'idel') { kill(S.items, sheet.id); sheet = null; save(); render(); toast('Gelöscht'); return; }
+    if (a === 'idel') { killUndo(S.items, sheet.id, 'Gelöscht'); return; }
     if (a === 'mkrec') {
       readSheet(); const d = sheet.d;
       if (!saveSheet()) return;
@@ -557,7 +577,7 @@
       save(); render(); return;
     }
     if (a === 'rbought') { readSheet(); sheet.d.l = H.today(); if (saveSheet()) { sheet = null; save(); render(); toast('Turnus neu gestartet'); } return; }
-    if (a === 'rdel') { kill(S.rec, sheet.id); sheet = null; save(); render(); toast('Dauerartikel gelöscht'); return; }
+    if (a === 'rdel') { killUndo(S.rec, sheet.id, 'Dauerartikel gelöscht'); return; }
     if (a === 'me') { S.me = Number(t.dataset.i) === 1 ? 1 : 0; save(true); render(); return; }
     if (a === 'ropen') { S.open[st] = !S.open[st]; render(); return; }
     if (a === 'rup' || a === 'rdn') {
@@ -573,7 +593,7 @@
     }
     if (a === 'joinok') { S.sync = { url: sheet.u, code: sheet.c, fresh: true }; sheet = null; ss = { state: '', msg: '' }; save(true); render(); syncNow(); return; }
     if (a === 'syncnow') { syncNow(); return; }
-    if (a === 'unlink') { S.sync = { url: '', code: '', fresh: false }; ss = { state: '', msg: '' }; save(true); render(); return; }
+    if (a === 'unlink') { if (!window.confirm('Abgleich auf diesem Gerät trennen?')) return; S.sync = { url: '', code: '', fresh: false }; ss = { state: '', msg: '' }; save(true); render(); return; }
     if (a === 'copy') {
       const el = $('invite'); if (!el) return;
       const sel = () => { el.focus(); el.select(); try { el.setSelectionRange(0, 9999); } catch (e) { /* egal */ } };
@@ -611,7 +631,7 @@
       if (v && (i === 0 || i === 1)) { S.set.names = S.set.names.slice(); S.set.names[i] = v; S.set.m = Date.now(); save(); }
     }
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet) { sheet = null; render(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet && leaveSheet()) render(); });
 
   checkHash();
   render();

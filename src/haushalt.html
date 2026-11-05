@@ -77,12 +77,6 @@ button.row { width: 100%; background: none; border: 0; text-align: left; cursor:
 button.row:active { background: var(--fill); }
 .chev::after { content: ""; flex: none; width: 8px; height: 8px; margin-left: 4px; border: solid var(--ink3); border-width: 2px 2px 0 0; transform: rotate(45deg); }
 
-/* Kennzahlen */
-.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.stat { background: var(--card); border-radius: 18px; padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
-.stat small { display: block; font-size: 13px; color: var(--ink2); }
-.stat b { display: block; font: 700 24px/1.2 var(--font); letter-spacing: -.02em; margin-top: 2px; }
-@media (min-width: 560px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* Buttons */
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
@@ -107,10 +101,6 @@ button.row:active { background: var(--fill); }
 .chip.neu { background: var(--accent); color: var(--accentink); font-weight: 600; padding: 3px 8px; font-size: 11px; margin-left: 6px; vertical-align: 2px; }
 .chip.spec { background: var(--warnbg); color: var(--warn); }
 .chip.hit { background: var(--tint); color: var(--accentfg); font-weight: 600; }
-.filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 16px 6px; margin: 0 -16px; scrollbar-width: none; }
-.filters::-webkit-scrollbar { display: none; }
-.filters button { flex: none; border: 0; border-radius: 999px; padding: 8px 14px; min-height: 36px; background: var(--card); color: var(--ink); font-size: 14px; cursor: pointer; box-shadow: var(--shadow); }
-.filters button[aria-pressed=true] { background: var(--accent); color: var(--accentink); font-weight: 600; }
 
 /* Eingaben */
 input[type=text], input[type=number], input[type=search], select, textarea {
@@ -132,8 +122,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 .sw input:focus-visible + i { outline: 3px solid var(--accentfg); outline-offset: 2px; }
 
 /* Punkt */
-.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--ink3)); flex: none; }
-.dot.off { background: transparent; border: 1.5px solid var(--ink3); }
 
 .note { margin-top: 16px; padding: 12px 14px; background: var(--tint); border-radius: 14px; font-size: 14.5px; }
 
@@ -211,8 +199,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 .frow .two select { max-width: 110px; flex: none; text-align-last: right; }
 .frow.col { flex-direction: column; align-items: stretch; }
 .frow.col input { max-width: none; text-align: left; background: var(--fill); padding: 10px 14px; }
-.pill { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--fill); color: var(--ink2); white-space: nowrap; }
-.pill.due { background: var(--warnbg); color: var(--warn); }
 .warnt { color: var(--warn); }
 .rt { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 16px; min-height: 46px; }
 .rt span { flex: 1; min-width: 0; font-size: 15.5px; }
@@ -229,11 +215,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 .chip.q .sm { color: var(--ink3); font-size: 12px; }
 #sugg { margin: -4px 0 12px; }
 
-.bars { display: flex; align-items: flex-end; gap: 6px; height: 112px; }
-.bc { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; }
-.bc i { display: block; width: 100%; max-width: 28px; min-height: 3px; border-radius: 6px 6px 3px 3px; background: var(--accent); }
-.bv { font-size: 11.5px; color: var(--ink2); min-height: 14px; }
-.bl { font-size: 11px; color: var(--ink3); }
 
 .dist { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 4px 0; font-size: 14.5px; }
 .dist b { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
@@ -244,7 +225,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 </style>
 <div id="app"><div id="main"></div><div id="sheetc"></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-<nav id="tabs" aria-label="Bereiche"><div class="in"><button type="button" data-act="tab" data-tab="list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/></svg>Liste</button><button type="button" data-act="tab" data-tab="rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16M20 20v-4h-4"/></svg>Nachkauf<span class="badge" id="rbadge" hidden></span></button><button type="button" data-act="tab" data-tab="tasks"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>Aufgaben<span class="badge" id="tbadge" hidden></span></button><button type="button" data-act="tab" data-tab="hist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Verlauf</button><button type="button" data-act="tab" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Mehr</button></div></nav>
+<nav id="tabs" aria-label="Bereiche"><div class="in"><button type="button" data-act="tab" data-tab="list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/></svg>Liste</button><button type="button" data-act="tab" data-tab="rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16M20 20v-4h-4"/></svg>Nachkauf<span class="badge" id="rbadge" hidden></span></button><button type="button" data-act="tab" data-tab="tasks"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>Aufgaben<span class="badge" id="tbadge" hidden></span></button><button type="button" data-act="tab" data-tab="hist"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Verlauf</button><button type="button" data-act="tab" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Mehr</button></div></nav>
 <script>
 /* Haushalt: Logik ohne Oberfläche (Daten, Abgleich, Fälligkeit, Kategorie-Vorschlag). */
 (function (root) {
@@ -287,7 +268,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   function guess(name, learn) {
     const n = String(name || '').trim().toLowerCase();
     if (!n) return { c: 'sonst', s: '' };
-    if (learn && learn[n] && !learn[n].x) return { c: learn[n].c, s: learn[n].s || '' };
+    const lr = own(learn, n); if (lr && !lr.x) return { c: lr.c, s: lr.s || '' };
     const toks = n.split(/[^a-zäöüß-]+/).filter(Boolean);
     let best = null, bs = 0;
     toks.forEach(t => {
@@ -444,7 +425,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   function muId(name) {
     const low = name.toLowerCase();
     for (const k of Object.keys(MU_IDS)) if (low.includes(k)) return MU_IDS[k];
-    return (low.replace(/[^a-z0-9]/g, '') || 'muell').slice(0, 20);
+    const id = low.replace(/[^a-z0-9]/g, '').slice(0, 20);
+    return id.length >= 4 ? id : 'mu' + hash(name).toString(36);
   }
   /* Import: Termine im Zeitraum der Datei ersetzen, alles außerhalb bleibt. Neue Arten werden angelegt. Rückgabe: Anzahl Termine. */
   function muImport(mu, parsed, now) {
@@ -586,9 +568,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (a.m !== b.m) return a.m > b.m ? a : b;
     return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
   }
+  const own = (o, k) => o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined;
   function mergeMap(a, b, now) {
     const out = {}, keys = new Set(Object.keys(a || {}).concat(Object.keys(b || {})));
-    keys.forEach(k => { const v = pick((a || {})[k], (b || {})[k]); if (v.x && v.m < now - TOMB) return; out[k] = v; });
+    keys.forEach(k => { const v = pick(own(a, k), own(b, k)); if (v.x && v.m < now - TOMB) return; out[k] = v; });
     return out;
   }
   function merge(a, b, now) {
@@ -626,12 +609,12 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       out.rec[k] = { n: str(x.n, 60), s: SK.includes(x.s) ? x.s : 'dis', c: CK.includes(x.c) ? x.c : 'sonst', e: Math.min(730, Math.max(1, e || 30)), l: DATE_RE.test(x.l || '') ? x.l : today(), p: x.p ? 1 : 0, m: num(x.m) };
     });
     Object.keys(d.lrn || {}).slice(0, 500).forEach(k => {
-      const x = d.lrn[k]; if (!x || typeof x !== 'object' || k.length > 60) return;
+      const x = d.lrn[k]; if (!x || typeof x !== 'object' || k.length > 60 || k === '__proto__') return;
       if (x.x) { out.lrn[k] = { x: 1, m: num(x.m) }; return; }
       out.lrn[k] = { c: CK.includes(x.c) ? x.c : 'sonst', s: SK.includes(x.s) ? x.s : '', m: num(x.m) };
     });
     Object.keys(d.fav || {}).slice(0, 1000).forEach(k => {
-      const x = d.fav[k]; if (!x || typeof x !== 'object' || k.length > 60) return;
+      const x = d.fav[k]; if (!x || typeof x !== 'object' || k.length > 60 || k === '__proto__') return;
       if (x.x) { out.fav[k] = { x: 1, m: num(x.m) }; return; }
       out.fav[k] = { n: str(x.n, 80), c: CK.includes(x.c) ? x.c : 'sonst', s: SK.includes(x.s) ? x.s : 'dis', k: Math.min(9999, Math.max(0, Math.round(num(x.k)))), m: num(x.m) };
     });
@@ -661,7 +644,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -715,6 +698,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   function putItem(id, o) { S.items[id] = Object.assign({}, S.items[id] || {}, o, { m: Date.now() }); }
   function putRec(id, o) { S.rec[id] = Object.assign({}, S.rec[id] || {}, o, { m: Date.now() }); }
   const kill = (map, id) => { map[id] = { x: 1, m: Date.now() }; };
+  function killUndo(map, id, msg) {
+    const snap = map[id]; kill(map, id); sheet = null; save(); render();
+    toast(msg, () => { map[id] = Object.assign({}, snap, { m: Date.now() }); save(); render(); });
+  }
   const dueRecs = () => recs().filter(r => !r.p && H.due(r).left <= 0 && !onList(r.id));
 
   /* ---------- Aktionen ---------- */
@@ -730,9 +717,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (!n) return;
     const dup = items().find(i => !i.d && i.n.toLowerCase() === n.toLowerCase());
     if (dup) { toast('„' + dup.n + '“ steht schon auf der Liste (' + H.SNAME[dup.s] + ')'); return; }
-    const fv = S.fav[n.toLowerCase().slice(0, 60)];
+    const fv = H.own(S.fav, n.toLowerCase().slice(0, 60));
     const g = forced ? { c: forced.c, s: forced.s } : fv && !fv.x ? { c: fv.c, s: fv.s } : H.guess(n, S.lrn), s = g.s || H.guessStore(g.c, S.store);
-    putItem(H.uid(), { n, s, c: g.c, q: '', b: S.me, d: 0, r: '' });
+    const rc = recs().find(r => r.n.toLowerCase() === n.toLowerCase());
+    putItem(H.uid(), { n, s, c: g.c, q: '', b: S.me, d: 0, r: rc ? rc.id : '' });
     if (s !== S.store) toast('„' + n + '“ → ' + H.SNAME[s] + ' · ' + H.CNAME[g.c]);
     save(); render();
   }
@@ -755,7 +743,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     ids.forEach(k => kill(S.items, k));
     const left = items().filter(i => !i.d && i.s === st).length;
     save(); render();
-    toast('Einkauf gespeichert · ' + done.length + (done.length === 1 ? ' Artikel' : ' Artikel') + (left ? ', ' + left + ' noch offen' : ''), () => { kill(S.trips, id); ids.forEach((k, j) => { S.items[k] = Object.assign({}, snap[j], { m: Date.now() }); }); save(); render(); });
+    toast('Einkauf gespeichert · ' + done.length + ' Artikel' + (left ? ', ' + left + ' noch offen' : ''), () => { kill(S.trips, id); ids.forEach((k, j) => { S.items[k] = Object.assign({}, snap[j], { m: Date.now() }); }); save(); render(); });
   }
   /* Vergessenes Abhaken: Erledigtes, das älter als 2 Tage ist, wird als Einkauf verbucht (Zeitpunkt = letztes Abhaken). */
   function autoClose() {
@@ -794,7 +782,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   const taskDue = f => tasks().map(withInfo).filter(t => t.left !== null && t.left <= 0 && (f === 'all' || whoTask(t) === Number(f)));
   const tripsList = () => Object.keys(S.trips).filter(k => !S.trips[k].x).map(k => Object.assign({ id: k }, S.trips[k])).sort((a, b) => b.t - a.t);
   function favBump(it, delta) {
-    const key = it.n.toLowerCase().slice(0, 60), old = S.fav[key];
+    const key = it.n.toLowerCase().slice(0, 60), old = H.own(S.fav, key);
     S.fav[key] = { n: it.n, c: it.c, s: it.s, k: Math.max(0, ((old && !old.x ? old.k : 0) || 0) + delta), m: Date.now() };
   }
   const openNames = () => new Set(items().filter(i => !i.d).map(i => i.n.toLowerCase().slice(0, 60)));
@@ -953,7 +941,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     keys.slice(0, 12).forEach(m => {
       const g = ts.filter(x => H.monday(x.t) === m);
       h += '<p class="cap">KW ' + H.kw(m) + ' · ' + H.fmtRange(m) + ' · ' + g.length + (g.length === 1 ? ' Einkauf' : ' Einkäufe') + '</p><div class="grp">' + g.map(x =>
-        '<div class="li padl"><button type="button" class="lt" data-act="tview" data-id="' + x.id + '"><b>' + esc(H.fmtDay(x.t)) + ', ' + esc(H.fmtTime(x.t)) + ' · ' + esc(H.SNAME[x.s]) + '</b><small>' + x.n + (x.n === 1 ? ' Artikel' : ' Artikel') + ' · ' + esc(names()[x.b]) + '</small></button></div>').join('') + '</div>';
+        '<div class="li padl"><button type="button" class="lt" data-act="tview" data-id="' + x.id + '"><b>' + esc(H.fmtDay(x.t)) + ', ' + esc(H.fmtTime(x.t)) + ' · ' + esc(H.SNAME[x.s]) + '</b><small>' + x.n + ' Artikel · ' + esc(names()[x.b]) + '</small></button></div>').join('') + '</div>';
     });
     return h;
   }
@@ -1005,7 +993,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       }
       h += '</div>';
     });
-    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 9</p>';
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 10</p>';
     return h;
   }
 
@@ -1132,6 +1120,15 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     }
     return true;
   }
+  /* Dialog verlassen, ohne „Fertig“: Änderungen bleiben erhalten, unberührte Einträge werden nicht neu gestempelt. */
+  function leaveSheet() {
+    if (!sheet) return true;
+    readSheet();
+    const edit = ['item', 'rec', 'task'].includes(sheet.t);
+    if (!edit || JSON.stringify(sheet.d) === sheet.o || (!sheet.id && !sheet.d.n.trim())) { sheet = null; return true; }
+    if (!saveSheet()) return false;
+    sheet = null; save(); return true;
+  }
   function taskDraft(id) {
     const t = S.tk[id], e = t.e || 7, u = e % 30 === 0 ? '30' : e % 7 === 0 ? '7' : '1';
     return { n: t.n, w: t.w, k: String(e / Number(u)), u, d: String(t.d), l: t.l, min: String(t.min), af: t.af || '', q: t.q || '', p: !!t.p };
@@ -1145,6 +1142,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   /* ---------- Darstellung ---------- */
   function render() {
     readSheet();
+    if (sheet && sheet.d && sheet.o === undefined) sheet.o = JSON.stringify(sheet.d);
     const main = $('main'), sc = window.scrollY;
     if (S.tab === 'list' && main.dataset.tab === 'list' && $('lbody')) {
       const all = items(), open = all.filter(i => !i.d);
@@ -1171,7 +1169,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   /* ---------- Ereignisse ---------- */
   function act(a, t) {
     const id = t.dataset.id, st = t.dataset.s;
-    if (a === 'tab') { $('toast').hidden = true; readSheet(); S.tab = t.dataset.tab; sheet = null; save(true); render(); window.scrollTo(0, 0); return; }
+    if (a === 'tab') { if (!leaveSheet()) return; $('toast').hidden = true; S.tab = t.dataset.tab; save(true); render(); window.scrollTo(0, 0); return; }
     if (a === 'store') { S.store = st; save(true); render(); return; }
     if (a === 'tog') { toggle(id); return; }
     if (a === 'tdone') { doneTask(id); return; }
@@ -1194,10 +1192,15 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (a === 'tnew') { sheet = { t: 'task', id: '', d: { n: '', w: 2, k: '1', u: '7', d: '-2', l: H.today(), min: '15', af: '', q: '', p: false } }; render(); return; }
     if (a === 'tw') { readSheet(); sheet.d.w = Number(t.dataset.v); render(); return; }
     if (a === 'tnow') { const sid = sheet.id; if (!saveSheet()) return; sheet = null; doneTask(sid); return; }
-    if (a === 'tdelt') { kill(S.tk, sheet.id); tasks().forEach(x => { if (x.af === sheet.id) putTk(x.id, { af: '', e: 7, d: -2 }); }); sheet = null; save(); render(); toast('Aufgabe gelöscht'); return; }
+    if (a === 'tdelt') {
+      const tid = sheet.id, snap = S.tk[tid], foll = tasks().filter(x => x.af === tid).map(x => [x.id, S.tk[x.id]]);
+      kill(S.tk, tid); foll.forEach(([k]) => putTk(k, { af: '', e: 7, d: -2 })); sheet = null; save(); render();
+      toast('Aufgabe gelöscht', () => { S.tk[tid] = Object.assign({}, snap, { m: Date.now() }); foll.forEach(([k, v]) => { S.tk[k] = Object.assign({}, v, { m: Date.now() }); }); save(); render(); });
+      return;
+    }
     if (a === 'finish') { closeTrip(S.store); return; }
     if (a === 'tview') { sheet = { t: 'trip', id }; render(); return; }
-    if (a === 'tdel') { kill(S.trips, sheet.id); sheet = null; save(); render(); toast('Einkauf gelöscht'); return; }
+    if (a === 'tdel') { killUndo(S.trips, sheet.id, 'Einkauf gelöscht'); return; }
     if (a === 'pick') { sheet = { t: 'pick' }; render(); return; }
     if (a === 'qadd' || a === 'sadd') { const e = entryFor(t.dataset.k); if (e) { addItem(e.n, { s: e.s, c: e.c }); if (a === 'sadd') { const i = $('addin'); if (i) { i.value = ''; i.focus(); } updateSugg(); } } return; }
     if (a === 'ptog') {
@@ -1213,10 +1216,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (a === 'edit') { const it = S.items[id]; if (!it || it.x) return; sheet = { t: 'item', id, d: { n: it.n, q: it.q || '', s: it.s, c: it.c, r: it.r || '' } }; render(); return; }
     if (a === 'redit') { if (!S.rec[id] || S.rec[id].x) return; sheet = { t: 'rec', id, d: recDraft(id) }; render(); return; }
     if (a === 'rnew') { sheet = { t: 'rec', id: '', d: { n: '', s: S.store, c: 'sonst', k: '4', u: '7', l: H.today(), p: false } }; render(); return; }
-    if (a === 'close') { sheet = null; render(); return; }
+    if (a === 'close') { if (leaveSheet()) render(); return; }
     if (a === 'done') { if (saveSheet()) { sheet = null; save(); render(); } return; }
     if (a === 'fs' || a === 'rs') { readSheet(); sheet.d.s = st; render(); return; }
-    if (a === 'idel') { kill(S.items, sheet.id); sheet = null; save(); render(); toast('Gelöscht'); return; }
+    if (a === 'idel') { killUndo(S.items, sheet.id, 'Gelöscht'); return; }
     if (a === 'mkrec') {
       readSheet(); const d = sheet.d;
       if (!saveSheet()) return;
@@ -1224,7 +1227,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       save(); render(); return;
     }
     if (a === 'rbought') { readSheet(); sheet.d.l = H.today(); if (saveSheet()) { sheet = null; save(); render(); toast('Turnus neu gestartet'); } return; }
-    if (a === 'rdel') { kill(S.rec, sheet.id); sheet = null; save(); render(); toast('Dauerartikel gelöscht'); return; }
+    if (a === 'rdel') { killUndo(S.rec, sheet.id, 'Dauerartikel gelöscht'); return; }
     if (a === 'me') { S.me = Number(t.dataset.i) === 1 ? 1 : 0; save(true); render(); return; }
     if (a === 'ropen') { S.open[st] = !S.open[st]; render(); return; }
     if (a === 'rup' || a === 'rdn') {
@@ -1240,7 +1243,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     }
     if (a === 'joinok') { S.sync = { url: sheet.u, code: sheet.c, fresh: true }; sheet = null; ss = { state: '', msg: '' }; save(true); render(); syncNow(); return; }
     if (a === 'syncnow') { syncNow(); return; }
-    if (a === 'unlink') { S.sync = { url: '', code: '', fresh: false }; ss = { state: '', msg: '' }; save(true); render(); return; }
+    if (a === 'unlink') { if (!window.confirm('Abgleich auf diesem Gerät trennen?')) return; S.sync = { url: '', code: '', fresh: false }; ss = { state: '', msg: '' }; save(true); render(); return; }
     if (a === 'copy') {
       const el = $('invite'); if (!el) return;
       const sel = () => { el.focus(); el.select(); try { el.setSelectionRange(0, 9999); } catch (e) { /* egal */ } };
@@ -1278,7 +1281,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       if (v && (i === 0 || i === 1)) { S.set.names = S.set.names.slice(); S.set.names[i] = v; S.set.m = Date.now(); save(); }
     }
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet) { sheet = null; render(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet && leaveSheet()) render(); });
 
   checkHash();
   render();

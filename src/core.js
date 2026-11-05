@@ -39,7 +39,7 @@
   function guess(name, learn) {
     const n = String(name || '').trim().toLowerCase();
     if (!n) return { c: 'sonst', s: '' };
-    if (learn && learn[n] && !learn[n].x) return { c: learn[n].c, s: learn[n].s || '' };
+    const lr = own(learn, n); if (lr && !lr.x) return { c: lr.c, s: lr.s || '' };
     const toks = n.split(/[^a-zäöüß-]+/).filter(Boolean);
     let best = null, bs = 0;
     toks.forEach(t => {
@@ -196,7 +196,8 @@
   function muId(name) {
     const low = name.toLowerCase();
     for (const k of Object.keys(MU_IDS)) if (low.includes(k)) return MU_IDS[k];
-    return (low.replace(/[^a-z0-9]/g, '') || 'muell').slice(0, 20);
+    const id = low.replace(/[^a-z0-9]/g, '').slice(0, 20);
+    return id.length >= 4 ? id : 'mu' + hash(name).toString(36);
   }
   /* Import: Termine im Zeitraum der Datei ersetzen, alles außerhalb bleibt. Neue Arten werden angelegt. Rückgabe: Anzahl Termine. */
   function muImport(mu, parsed, now) {
@@ -338,9 +339,10 @@
     if (a.m !== b.m) return a.m > b.m ? a : b;
     return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
   }
+  const own = (o, k) => o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined;
   function mergeMap(a, b, now) {
     const out = {}, keys = new Set(Object.keys(a || {}).concat(Object.keys(b || {})));
-    keys.forEach(k => { const v = pick((a || {})[k], (b || {})[k]); if (v.x && v.m < now - TOMB) return; out[k] = v; });
+    keys.forEach(k => { const v = pick(own(a, k), own(b, k)); if (v.x && v.m < now - TOMB) return; out[k] = v; });
     return out;
   }
   function merge(a, b, now) {
@@ -378,12 +380,12 @@
       out.rec[k] = { n: str(x.n, 60), s: SK.includes(x.s) ? x.s : 'dis', c: CK.includes(x.c) ? x.c : 'sonst', e: Math.min(730, Math.max(1, e || 30)), l: DATE_RE.test(x.l || '') ? x.l : today(), p: x.p ? 1 : 0, m: num(x.m) };
     });
     Object.keys(d.lrn || {}).slice(0, 500).forEach(k => {
-      const x = d.lrn[k]; if (!x || typeof x !== 'object' || k.length > 60) return;
+      const x = d.lrn[k]; if (!x || typeof x !== 'object' || k.length > 60 || k === '__proto__') return;
       if (x.x) { out.lrn[k] = { x: 1, m: num(x.m) }; return; }
       out.lrn[k] = { c: CK.includes(x.c) ? x.c : 'sonst', s: SK.includes(x.s) ? x.s : '', m: num(x.m) };
     });
     Object.keys(d.fav || {}).slice(0, 1000).forEach(k => {
-      const x = d.fav[k]; if (!x || typeof x !== 'object' || k.length > 60) return;
+      const x = d.fav[k]; if (!x || typeof x !== 'object' || k.length > 60 || k === '__proto__') return;
       if (x.x) { out.fav[k] = { x: 1, m: num(x.m) }; return; }
       out.fav[k] = { n: str(x.n, 80), c: CK.includes(x.c) ? x.c : 'sonst', s: SK.includes(x.s) ? x.s : 'dis', k: Math.min(9999, Math.max(0, Math.round(num(x.k)))), m: num(x.m) };
     });
@@ -413,6 +415,6 @@
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);
