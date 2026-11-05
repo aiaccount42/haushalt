@@ -1,7 +1,7 @@
 {
   "name": "Haushalt",
   "short_name": "Haushalt",
-  "description": "Geteilte Einkaufsliste und Dauerartikel",
+  "description": "Geteilte Einkaufsliste, Nachkauf und Aufgaben",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

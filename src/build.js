@@ -1,5 +1,5 @@
 const fs = require('fs');
-const CACHE_V = 10; /* bei jeder neuen Version erhöhen, sonst zeigt die App den alten Stand; die Anzeige unter „Mehr“ folgt automatisch */
+const CACHE_V = 11; /* bei jeder neuen Version erhöhen, sonst zeigt die App den alten Stand; die Anzeige unter „Mehr“ folgt automatisch */
 const d = __dirname + '/';
 const css = fs.readFileSync(d + 'style.css', 'utf8') + '\n[hidden] { display: none !important; }\n';
 const core = fs.readFileSync(d + 'core.js', 'utf8');
@@ -8,10 +8,9 @@ const icons = {
   list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/>',
   rec: '<path d="M20 11a8 8 0 0 0-14.3-4.6L4 8M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.6L20 16M20 20v-4h-4"/>',
   tasks: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>',
-  hist: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
   more: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
 };
-const tabs = [['list', 'Liste'], ['rec', 'Nachkauf'], ['tasks', 'Aufgaben'], ['hist', 'Verlauf'], ['more', 'Mehr']];
+const tabs = [['list', 'Liste'], ['tasks', 'Aufgaben'], ['rec', 'Nachkauf'], ['more', 'Mehr']];
 const nav = '<nav id="tabs" aria-label="Bereiche"><div class="in">' + tabs.map(([k, l]) => '<button type="button" data-act="tab" data-tab="' + k + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + icons[k] + '</svg>' + l + (k === 'rec' ? '<span class="badge" id="rbadge" hidden></span>' : k === 'tasks' ? '<span class="badge" id="tbadge" hidden></span>' : '') + '</button>').join('') + '</div></nav>';
 /* Ausgabe: liegt der Code in einem Ordner "src", gehen die fertigen Dateien in den Ordner darüber (Repo-Hauptordner = GitHub Pages). Sonst nach dist/. Mit OUT=pfad überschreibbar. */
 const path = require('path');
@@ -32,7 +31,7 @@ const html = '<!doctype html>\n<html lang="de"><head><meta charset="utf-8">\n<me
   '<script>' + js + '</script>\n<script>' + swJs + '</script>\n</body></html>\n';
 fs.writeFileSync(dist + 'index.html', html);
 fs.writeFileSync(dist + 'manifest.webmanifest', JSON.stringify({
-  name: 'Haushalt', short_name: 'Haushalt', description: 'Geteilte Einkaufsliste und Dauerartikel', lang: 'de', start_url: './', scope: './', display: 'standalone',
+  name: 'Haushalt', short_name: 'Haushalt', description: 'Geteilte Einkaufsliste, Nachkauf und Aufgaben', lang: 'de', start_url: './', scope: './', display: 'standalone',
   background_color: '#F2F2F7', theme_color: '#F2F2F7',
   icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
 }, null, 2));

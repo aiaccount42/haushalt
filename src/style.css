@@ -213,7 +213,5 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 #sugg { margin: -4px 0 12px; }
 
 
-.dist { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 4px 0; font-size: 14.5px; }
-.dist b { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
-.dbar { height: 10px; border-radius: 999px; background: var(--fill); overflow: hidden; }
-.dbar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.row .val.warnt { color: var(--warn); font-weight: 600; }
+.chev[aria-expanded=true]::after { transform: rotate(135deg); }
