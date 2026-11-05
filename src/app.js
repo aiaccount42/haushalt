@@ -338,7 +338,7 @@
       }
       h += '</div>';
     });
-    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 8</p>';
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 9</p>';
     return h;
   }
 

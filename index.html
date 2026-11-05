@@ -1016,7 +1016,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       }
       h += '</div>';
     });
-    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 8</p>';
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 9</p>';
     return h;
   }
 
@@ -1299,5 +1299,5 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 })();
 
 </script>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
+<script>if("serviceWorker" in navigator){var had=!!navigator.serviceWorker.controller,re=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(had&&!re){re=true;location.reload();}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(function(){});});}</script>
 </body></html>

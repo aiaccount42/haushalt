@@ -1,5 +1,5 @@
 const fs = require('fs');
-const CACHE_V = 8; /* bei jeder neuen Version erhöhen, sonst zeigt die App den alten Stand */
+const CACHE_V = 9; /* bei jeder neuen Version erhöhen, sonst zeigt die App den alten Stand */
 const d = __dirname + '/';
 const css = fs.readFileSync(d + 'style.css', 'utf8') + '\n[hidden] { display: none !important; }\n';
 const core = fs.readFileSync(d + 'core.js', 'utf8');
@@ -21,7 +21,7 @@ const html = '<!doctype html>\n<html lang="de"><head><meta charset="utf-8">\n<me
   '<title>Haushalt</title>\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Haushalt">\n<meta name="apple-mobile-web-app-status-bar-style" content="default">\n' +
   '<meta name="theme-color" content="#F2F2F7">\n<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="icon-180.png">\n<link rel="icon" href="icon-192.png">\n' +
   '<style>\n' + css + '</style>\n</head><body>\n<div id="app"><div id="main"></div><div id="sheetc"></div></div>\n<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>\n' + nav + '\n' +
-  '<script>\n' + core + '\n' + app + '\n</script>\n<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>\n</body></html>\n';
+  '<script>\n' + core + '\n' + app + '\n</script>\n<script>if("serviceWorker" in navigator){var had=!!navigator.serviceWorker.controller,re=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(had&&!re){re=true;location.reload();}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(function(){});});}</script>\n</body></html>\n';
 fs.writeFileSync(dist + 'index.html', html);
 fs.writeFileSync(dist + 'manifest.webmanifest', JSON.stringify({
   name: 'Haushalt', short_name: 'Haushalt', description: 'Geteilte Einkaufsliste und Dauerartikel', lang: 'de', start_url: './', scope: './', display: 'standalone',
