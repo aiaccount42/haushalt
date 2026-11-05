@@ -1,5 +1,5 @@
 const fs = require('fs');
-const CACHE_V = 7; /* bei jeder neuen Version erhöhen, sonst zeigt die App den alten Stand */
+const CACHE_V = 8; /* bei jeder neuen Version erhöhen, sonst zeigt die App den alten Stand */
 const d = __dirname + '/';
 const css = fs.readFileSync(d + 'style.css', 'utf8') + '\n[hidden] { display: none !important; }\n';
 const core = fs.readFileSync(d + 'core.js', 'utf8');

@@ -948,26 +948,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     const ts = tripsList();
     let h = '<h1 class="ltitle">Verlauf</h1><p class="lsub">Abgeschlossene Einkäufe, nach Woche sortiert.</p>';
     if (!ts.length) return h + '<div class="empty">Noch kein Einkauf abgeschlossen.<br>Auf der Liste Artikel abhaken, dann „Einkauf abschließen“ tippen.</div>';
-    const now = Date.now(), w0 = H.monday(now), cur = ts.filter(x => H.monday(x.t) === w0), l4 = ts.filter(x => x.t >= now - 28 * H.DAY);
-    const sum = l => l.reduce((a, x) => a + x.n, 0);
-    h += '<div class="stats">' +
-      '<div class="stat"><small>Diese Woche</small><b>' + cur.length + (cur.length === 1 ? ' Einkauf' : ' Einkäufe') + '</b><small>' + sum(cur) + ' Artikel</small></div>' +
-      '<div class="stat"><small>Letzte 4 Wochen</small><b>' + l4.length + (l4.length === 1 ? ' Einkauf' : ' Einkäufe') + '</b><small>' + sum(l4) + ' Artikel</small></div>' +
-      '<div class="stat"><small>Zuletzt</small><b>' + esc(H.fmtDay(ts[0].t)) + '</b><small>' + esc(H.SNAME[ts[0].s]) + '</small></div>' +
-      '<div class="stat"><small>Pro Einkauf</small><b>' + (l4.length ? Math.round(sum(l4) / l4.length) : 0) + ' Artikel</b><small>letzte 4 Wochen</small></div></div>';
-    // Balken: Artikel je Woche, letzte 8 Wochen
-    const wk = []; for (let i = 7; i >= 0; i--) wk.push(H.addDays(w0, -7 * i));
-    const per = wk.map(m => ts.filter(x => H.monday(x.t) === m)), mx = Math.max(1, ...per.map(sum));
-    h += '<p class="cap">Artikel pro Woche</p><div class="grp"><div class="pad"><div class="bars" role="img" aria-label="Artikel pro Woche, letzte 8 Wochen">' + wk.map((m, i) => '<div class="bc"><span class="bv">' + (sum(per[i]) || '') + '</span><i style="height:' + Math.round(sum(per[i]) / mx * 70) + 'px"></i><span class="bl">' + H.kw(m) + '</span></div>').join('') + '</div><p class="foot" style="margin:6px 0 0">Zahlen unten sind Kalenderwochen.</p></div></div>';
-    // üblicher Tag je Laden
-    const usual = [];
-    H.STORES.forEach(([k, l]) => {
-      const g = ts.filter(x => x.s === k && x.t >= now - 84 * H.DAY); if (g.length < 2) return;
-      const c = [0, 0, 0, 0, 0, 0, 0]; g.forEach(x => { c[new Date(x.t).getDay()]++; });
-      const d = c.indexOf(Math.max.apply(null, c));
-      usual.push('<div class="row"><span class="grow"><b>' + esc(l) + '</b></span><span class="val">meist ' + H.WDL[d] + ' (' + c[d] + ' von ' + g.length + ')</span></div>');
-    });
-    if (usual.length) h += '<p class="cap">Wann ihr einkauft</p><div class="grp">' + usual.join('') + '</div>';
     // Wochen
     const keys = []; ts.forEach(x => { const m = H.monday(x.t); if (!keys.includes(m)) keys.push(m); });
     keys.slice(0, 12).forEach(m => {
