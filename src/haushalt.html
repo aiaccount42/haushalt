@@ -218,6 +218,9 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
 
 .row .val.warnt { color: var(--warn); font-weight: 600; }
 .chev[aria-expanded=true]::after { transform: rotate(135deg); }
+.nkr { padding-right: 10px; }
+.nkr select { flex: none; width: 132px; align-self: center; min-height: 34px; border: 0; background: var(--fill); color: var(--ink); border-radius: 9px; padding: 4px 6px; font: inherit; font-size: 13px; }
+.nkr.done .lt b { color: var(--ink); text-decoration: none; }
 
 [hidden] { display: none !important; }
 </style>
@@ -263,11 +266,12 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   const SHORT = new Set(['ei', 'öl', 'tk', 'eis']);
 
   /* Vorschlag für die Kategorie. Gelerntes (frühere Korrekturen) hat Vorrang. */
+  const KUECHE = ['backpapier', 'alufolie', 'frischhaltefolie', 'gefrierbeutel'];
   function guess(name, learn) {
     const n = String(name || '').trim().toLowerCase();
     if (!n) return { c: 'sonst', s: '' };
     const lr = own(learn, n); if (lr && !lr.x) return { c: lr.c, s: lr.s || '' };
-    if (n.includes('backpapier')) return { c: 'papier', s: 'dis' };
+    if (KUECHE.some(k => n.includes(k))) return { c: 'papier', s: 'dis' };
     const toks = n.split(/[^a-zäöüß-]+/).filter(Boolean);
     let best = null, bs = 0;
     toks.forEach(t => {
@@ -343,7 +347,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   /* ---- Startbestand: gängige Dauerartikel [Name, Laden, Kategorie, Tage] ---- */
   const SEED = [
     ['Toilettenpapier', 'dro', 'papier', 28], ['Küchenrollen', 'dro', 'papier', 28], ['Taschentücher', 'dro', 'papier', 42], ['Müllbeutel', 'dro', 'papier', 42],
-    ['Alufolie', 'dro', 'papier', 90], ['Backpapier', 'dis', 'papier', 90], ['Frischhaltefolie', 'dro', 'papier', 120], ['Gefrierbeutel', 'dro', 'papier', 120],
+    ['Alufolie', 'dis', 'papier', 90], ['Backpapier', 'dis', 'papier', 90], ['Frischhaltefolie', 'dis', 'papier', 120], ['Gefrierbeutel', 'dis', 'papier', 120],
     ['Spülmittel', 'dro', 'reinigung', 42], ['Spülmaschinentabs', 'dro', 'reinigung', 35], ['Geschirrspülsalz', 'dro', 'reinigung', 120], ['Waschmittel', 'dro', 'reinigung', 56],
     ['Weichspüler', 'dro', 'reinigung', 84], ['Allzweckreiniger', 'dro', 'reinigung', 90], ['WC-Reiniger', 'dro', 'reinigung', 60], ['Spülschwämme', 'dro', 'reinigung', 60],
     ['Spültücher', 'dro', 'reinigung', 90], ['Duschgel', 'dro', 'pflege', 42], ['Shampoo', 'dro', 'pflege', 56], ['Handseife', 'dro', 'pflege', 42],
@@ -651,13 +655,13 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       out.mu[k] = { n: str(x.n, 30) || k, a: x.a ? 1 : 0, d: ds, dn: DATE_RE.test(x.dn || '') ? x.dn : '', m: num(x.m) };
     });
     const st = d.set && typeof d.set === 'object' ? d.set : {};
-    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', m: num(st.m) };
+    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', nkOk: st.nkOk ? 1 : 0, m: num(st.m) };
     return out;
   }
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, KUECHE, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -673,7 +677,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   let S;
   function fresh() {
     const now = Date.now();
-    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: '0', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), nkW: 4, nkN: '', m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
+    return { items: { iwsack01: { n: 'Wäschesäcke (30°, 40°, Handtücher)', s: 'voll', c: 'sonst', q: '3 Stück', b: 0, d: 0, r: '', m: 1 } }, rec: H.seed(now), lrn: {}, fav: {}, trips: {}, tk: H.seedTasks(now, 4), tkSeed: true, mu: H.seedMuell(), muMig: true, wMig: true, tf: '0', set: { round: 4, names: ['Roman', 'Ayşe'], route: H.defaultRoute(), nkW: 4, nkN: '', nkOk: 0, m: now }, me: 0, tab: 'list', store: 'dis', sync: { url: '', code: '', fresh: false }, open: {} };
   }
   function load() {
     try {
@@ -684,7 +688,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         s.items = d.items; s.rec = d.rec; s.lrn = d.lrn; s.fav = d.fav; s.trips = d.trips; s.tk = d.tk; s.set = d.set; s.mu = r.mu ? d.mu : H.seedMuell(); s.muMig = !!r.muMig; s.wMig = !!r.wMig;
         if (!s.wMig) { if (!s.items.iwsack01) s.items.iwsack01 = fresh().items.iwsack01; s.wMig = true; }
         if (!s.muMig) { ['Restmüll rausbringen', 'Biomüll rausbringen', 'Gelben Sack rausbringen', 'Papiertonne rausbringen'].forEach(n => { const id = H.taskId(n); if (s.tk[id] && !s.tk[id].x) s.tk[id] = { x: 1, m: Date.now() }; }); s.muMig = true; } s.tkSeed = !!r.tkSeed; s.tf = ['all', '0', '1'].includes(r.tf) ? r.tf : 'all';
-        if (!r.bpMig) { Object.keys(s.rec).forEach(k => { const x = s.rec[k]; if (!x.x && x.n === 'Backpapier' && x.s === 'dro') s.rec[k] = Object.assign({}, x, { s: 'dis', m: Date.now() }); }); } s.bpMig = true;
+        if (!r.bpMig) { Object.keys(s.rec).forEach(k => { const x = s.rec[k]; if (!x.x && H.KUECHE.includes(x.n.toLowerCase()) && x.s === 'dro') s.rec[k] = Object.assign({}, x, { s: 'dis', m: Date.now() }); }); } s.bpMig = true;
         if (!s.tkSeed) { s.tk = Object.assign(H.seedTasks(Date.now(), s.set.round), s.tk); s.tkSeed = true; }
         s.me = r.me === 1 ? 1 : 0; s.tf = String(s.me); s.tab = ['list', 'rec', 'tasks', 'hist', 'more'].includes(r.tab) ? r.tab : 'list'; s.store = H.SK.includes(r.store) ? r.store : 'dis';
         if (r.sync && normUrl(r.sync.url) && /^[a-z0-9]{8,32}$/.test(r.sync.code || '')) s.sync = { url: normUrl(r.sync.url), code: r.sync.code, fresh: !!r.sync.fresh };
@@ -807,16 +811,22 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   }
   /* Nachkauf-Tag: alles, was bis zur nächsten Runde nicht reicht, kommt von selbst auf die Liste. */
   function nkTick() {
-    if (typing()) return false;
-    const t0 = H.today();
-    if (!S.set.nkN) { S.set = Object.assign({}, S.set, { nkN: H.nkFirst(t0), m: Date.now() }); save(); render(); return true; }
-    const a = H.nkAdvance(S.set.nkN, S.set.nkW, t0); if (!a.run) return false;
+    if (!S.set.nkOk || typing()) return false;
+    const t0 = H.today(), a = H.nkAdvance(S.set.nkN, S.set.nkW, t0); if (!a.run) return false;
     let n = 0;
     H.nkPick(recs(), a.run, S.set.nkW).filter(r => !onList(r.id)).forEach(r => { const id = H.nkId(r.id, a.run); if (S.items[id]) return; const k = H.nkQty(r, S.set.nkW); putItem(id, { n: r.n, s: r.s, c: r.c, q: k > 1 ? k + ' Stück' : '', b: S.me, d: 0, r: r.id }); n++; });
     S.set = Object.assign({}, S.set, { nkN: a.next, m: Date.now() });
     save(); render();
     if (n) toast(n + ' Nachkauf-Artikel auf der Liste');
     return true;
+  }
+  /* Auswahl: eigene Artikel plus Vorschläge, die noch nicht dabei sind. Empfehlung = Abstand aus dem Vorschlag. */
+  function nkRows() {
+    const tips = {}, rows = {}, seen = new Set();
+    Object.values(H.seed(0)).map(x => [x.n, x.s, x.c, x.e]).concat(H.CAT_REC.map(x => x.slice(0, 4))).forEach(x => { const k = x[0].toLowerCase(); if (!tips[k]) tips[k] = x; });
+    recs().forEach(r => { const k = r.n.toLowerCase(); seen.add(k); rows[r.id] = { rid: r.id, n: r.n, s: r.s, c: r.c, e: r.e, e0: r.e, rc: tips[k] ? tips[k][3] : 0, on: true }; });
+    Object.keys(tips).forEach((k, i) => { if (seen.has(k)) return; const x = tips[k], g = H.guess(x[0]).s; rows['c' + i] = { rid: '', n: x[0], s: H.KUECHE.includes(k) ? g : x[1], c: x[2], e: x[3], e0: x[3], rc: x[3], on: false }; });
+    return rows;
   }
   function purgeDone(st) {
     let n = 0;
@@ -966,8 +976,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     let h = '<h1 class="ltitle">Nachkauf</h1>';
     h += '<div class="grp" style="margin-top:12px"><div class="frow"><label for="nk_d">Nächster Nachkauf-Tag</label><input type="date" id="nk_d" value="' + esc(date) + '" min="' + t0 + '"></div></div>';
     h += '<p class="foot">' + esc(H.fmtDay(H.toDate(date).getTime())) + ', ' + (left === 0 ? 'heute' : left === 1 ? 'morgen' : 'in ' + left + ' Tagen') + '. Dann steht alles von selbst auf der Liste.</p>';
+    if (!S.set.nkOk) h = h.replace('Dann steht alles von selbst auf der Liste.', 'Der Termin zählt, sobald deine Auswahl steht.');
     h += '<div class="seg" role="group" aria-label="Abstand der Nachkauf-Tage">' + H.NK_W.map(v => '<button type="button" data-act="nkw" data-v="' + v + '" aria-pressed="' + (w === v) + '">' + v + ' Wochen</button>').join('') + '</div>';
     const sec = (t, l, f) => l.length ? '<p class="cap">' + t + ' · ' + l.length + '</p><div class="grp">' + l.map(r => recRow(r, f(r))).join('') + '</div>' : '';
+    if (!S.set.nkOk) return h + '<div class="empty">Wähle zuerst aus, was du kaufst und wie oft. Bis dahin kommt nichts von selbst auf die Liste.</div><div class="actions"><button type="button" class="btn" data-act="nkpick">Artikel auswählen</button></div>';
     h += sec('Auf der Liste', on, r => H.SNAME[r.s]) + sec('Kommt am Nachkauf-Tag', now, r => H.SNAME[r.s]);
     if (!on.length && !now.length && rs.length) h += '<div class="empty">Beim nächsten Nachkauf-Tag ist nichts dran.</div>';
     const rest = later.length + pause.length;
@@ -977,7 +989,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       if (op) h += sec('Spätere Nachkauf-Tage', later, r => esc(H.fmtDay(H.toDate(H.nkNext(r, date, w)).getTime())) + ' · ' + H.SNAME[r.s]) + sec('Pausiert', pause, r => H.SNAME[r.s]);
     }
     if (!rs.length) h += '<div class="empty">Noch keine Artikel.</div>';
-    h += '<div class="actions"><button type="button" class="btn gray" data-act="rnew">Neuer Artikel</button><button type="button" class="btn gray" data-act="catrec">Aus dem Katalog</button><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>';
+    h += '<div class="actions"><button type="button" class="btn gray" data-act="nkpick">Artikel auswählen</button><button type="button" class="btn gray" data-act="rnew">Neuer Artikel</button><button type="button" class="btn gray" data-act="plan">Übersicht</button></div>';
     return h;
   }
   function syncBox() {
@@ -1017,7 +1029,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         h += '</div>';
       });
     }
-    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 12</p>';
+    h += '<p class="foot" style="margin-top:18px">Haushalt · Version 13</p>';
     return h;
   }
 
@@ -1042,6 +1054,14 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         '<div class="frow"><span class="lb">Pausiert</span><label class="sw"><input type="checkbox" id="r_p"' + (d.p ? ' checked' : '') + ' aria-label="Pausiert"><i></i></label></div></div>' +
         '<p class="foot">Er kommt am Nachkauf-Tag auf die Liste, wenn er bis zum nächsten nicht mehr reicht. Pausiert heißt: Er kommt nicht von selbst.</p>',
         '<div class="actions">' + (sheet.id ? (onList(sheet.id) ? '' : '<button type="button" class="btn soft" data-act="rlist">Jetzt auf die Liste</button>') + '<button type="button" class="btn soft" data-act="rbought">Gerade gekauft</button><button type="button" class="btn danger" data-act="rdel">Löschen</button>' : '') + '</div>');
+    }
+    if (sheet.t === 'nkpick') {
+      const rows = sheet.d.rows, keys = Object.keys(rows), n = keys.filter(k => rows[k].on).length;
+      const opts = r => Array.from(new Set([14, 21, 28, 42, 56, 84, 120, 180].concat(r.e, r.rc || []))).sort((a, b) => a - b).map(v => '<option value="' + v + '"' + (v === r.e ? ' selected' : '') + '>' + (v === r.rc ? '★ ' : '') + esc(H.everyText(v)) + '</option>').join('');
+      const row = k => { const r = rows[k]; return '<div class="li nkr' + (r.on ? ' done pk' : '') + '"><button type="button" class="chk" data-act="nktog" data-k="' + esc(k) + '" aria-label="' + esc(r.n) + (r.on ? ' abwählen' : ' auswählen') + '"><span class="box"></span></button><button type="button" class="lt" data-act="nktog" data-k="' + esc(k) + '"><b>' + esc(r.n) + '</b></button>' + (r.on ? '<select data-nke="' + esc(k) + '" aria-label="Wie oft: ' + esc(r.n) + '">' + opts(r) + '</select>' : '') + '</div>'; };
+      let b = '<div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:6px"><span class="sub">' + n + ' von ' + keys.length + ' ausgewählt · ★ Empfehlung</span><button type="button" class="lnk" data-act="nkall">Alle abwählen</button></div>';
+      H.STORES.forEach(([k, l]) => { const g = keys.filter(x => rows[x].s === k).sort((x, y) => rows[x].n.localeCompare(rows[y].n, 'de')); if (g.length) b += '<p class="cap">' + esc(l) + '</p><div class="grp">' + g.map(row).join('') + '</div>'; });
+      return shell('Artikel auswählen', b, '<div class="actions"><button type="button" class="btn" data-act="done">' + (S.set.nkOk ? 'Übernehmen' : 'Übernehmen und starten') + '</button></div>');
     }
     if (sheet.t === 'tcard') {
       const t = S.tk[sheet.id]; if (!t || t.x) return '';
@@ -1081,9 +1101,9 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
         '<div class="actions">' + (sheet.id ? '<button type="button" class="btn soft" data-act="tnow">Jetzt erledigt</button><button type="button" class="btn danger" data-act="tdelt">Löschen</button>' : '') + '</div>');
     }
     if (sheet.t === 'cat') {
-      const isT = sheet.k === 'tk', list = isT ? H.CAT_TK : H.CAT_REC, have = new Set((isT ? tasks() : recs()).map(x => x.n.toLowerCase()));
-      return shell(isT ? 'Aufgaben-Katalog' : 'Nachkauf-Katalog', '<p class="foot" style="margin:0 2px 10px">Richtwerte aus gängigen Empfehlungen. Nach dem Hinzufügen kannst du Rhythmus und Details ändern.</p><div class="grp">' + list.map((x, i) => {
-        const n = x[0], e = isT ? x[1] : x[3], why = isT ? x[3] : x[4], has = have.has(n.toLowerCase());
+      const list = H.CAT_TK, have = new Set(tasks().map(x => x.n.toLowerCase()));
+      return shell('Aufgaben-Katalog', '<p class="foot" style="margin:0 2px 10px">Richtwerte aus gängigen Empfehlungen. Nach dem Hinzufügen kannst du Rhythmus und Details ändern.</p><div class="grp">' + list.map((x, i) => {
+        const n = x[0], e = x[1], why = x[3], has = have.has(n.toLowerCase());
         return '<div class="li padl"><div class="lt"><b>' + esc(n) + '</b><small>' + esc(H.everyText(e)) + (why ? ' · ' + esc(why) : '') + '</small></div>' + (has ? '<span class="sub" style="padding-right:14px">dabei</span>' : '<button type="button" class="btn sm soft" style="margin-right:12px" data-act="catadd" data-i="' + i + '">Hinzufügen</button>') + '</div>';
       }).join('') + '</div>', '');
     }
@@ -1155,6 +1175,16 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       const l = H.DATE_RE.test(d.l) && d.l <= H.today() ? d.l : H.today();
       const old = S.tk[id] && !S.tk[id].x ? S.tk[id] : null;
       putTk(id, { n, w: d.w, e, d: d.af ? -1 : Number(d.d), min: Math.max(0, Math.min(240, Math.round(Number(d.min)) || 0)), l, lw: old ? old.lw : -1, t: old ? old.t : '', af: d.af || '', q: d.q.trim(), p: d.p ? 1 : 0, chk: 0 });
+    } else if (sheet.t === 'nkpick') {
+      Object.keys(d.rows).forEach(k => {
+        const r = d.rows[k], fresh = H.addDays(H.today(), -r.e);
+        if (r.rid && !r.on) kill(S.rec, r.rid);
+        else if (r.rid && !S.set.nkOk) putRec(r.rid, { e: r.e, l: fresh });
+        else if (r.rid && r.e !== r.e0) putRec(r.rid, { e: r.e });
+        else if (!r.rid && r.on) putRec(H.uid(), { n: r.n, s: r.s, c: r.c, e: r.e, l: fresh, p: 0 });
+      });
+      S.set = Object.assign({}, S.set, { nkOk: 1, nkN: S.set.nkN || H.nkFirst(H.today()), m: Date.now() });
+      toast('Auswahl gespeichert');
     } else if (sheet.t === 'rec') {
       const n = d.n.trim().replace(/\s+/g, ' ');
       if (!n) { toast('Bitte einen Namen eingeben.'); return false; }
@@ -1170,10 +1200,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
   function leaveSheet() {
     if (!sheet) return true;
     readSheet();
-    const edit = ['item', 'rec', 'task'].includes(sheet.t);
-    if (!edit || JSON.stringify(sheet.d) === sheet.o || (!sheet.id && !sheet.d.n.trim())) { sheet = null; return true; }
+    const edit = ['item', 'rec', 'task', 'nkpick'].includes(sheet.t);
+    if (!edit || JSON.stringify(sheet.d) === sheet.o || (!sheet.id && sheet.t !== 'nkpick' && !sheet.d.n.trim())) { sheet = null; return true; }
     if (!saveSheet()) return false;
-    sheet = null; save(); return true;
+    sheet = null; save(); nkTick(); return true;
   }
   function taskDraft(id) {
     const t = S.tk[id], e = t.e || 7, u = e % 30 === 0 ? '30' : e % 7 === 0 ? '7' : '1';
@@ -1197,7 +1227,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       main.innerHTML = '<div class="view">' + (S.tab === 'list' ? viewList() : S.tab === 'rec' ? viewRec() : S.tab === 'tasks' ? viewTasks() : S.tab === 'hist' ? viewHist() : viewMore()) + '</div>';
       main.dataset.tab = S.tab;
     }
-    const oldShb = $('sheetc').querySelector('.shb'), keepTop = oldShb && sheet && sheet.t === 'pick' ? oldShb.scrollTop : 0;
+    const oldShb = $('sheetc').querySelector('.shb'), keepTop = oldShb && sheet && ['pick', 'nkpick'].includes(sheet.t) ? oldShb.scrollTop : 0;
     $('sheetc').innerHTML = sheetHtml();
     if (keepTop) { const nb = $('sheetc').querySelector('.shb'); if (nb) nb.scrollTop = keepTop; }
     document.body.classList.toggle('lock', !!sheet);
@@ -1227,12 +1257,13 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (a === 'tmore') { sheet = { t: 'tmore', d: {} }; render(); return; }
     if (a === 'mu') { sheet = { t: 'mu', d: {} }; render(); return; }
     if (a === 'cattk') { sheet = { t: 'cat', k: 'tk', d: {} }; render(); return; }
-    if (a === 'catrec') { sheet = { t: 'cat', k: 'rec', d: {} }; render(); return; }
+    if (a === 'nkpick') { sheet = { t: 'nkpick', id: 'nk', d: { rows: nkRows() } }; render(); return; }
+    if (a === 'nktog') { const r = sheet.d.rows[t.dataset.k]; if (r) { r.on = !r.on; render(); } return; }
+    if (a === 'nkall') { Object.values(sheet.d.rows).forEach(r => { r.on = false; }); render(); return; }
     if (a === 'plan') { sheet = { t: 'plan', d: {} }; render(); return; }
     if (a === 'catadd') {
       const i = Number(t.dataset.i), sc = $('sheetc').querySelector('.shb'), top = sc ? sc.scrollTop : 0;
-      if (sheet && sheet.k === 'tk') { const x = H.CAT_TK[i]; if (x) putTk(H.uid(), { n: x[0], w: 2, e: x[1], d: -2, min: x[2], l: H.today(), lw: -1, t: '', af: '', q: '', p: 0, chk: 0 }); }
-      else if (sheet && sheet.k === 'rec') { const x = H.CAT_REC[i]; if (x) putRec(H.uid(), { n: x[0], s: x[1], c: x[2], e: x[3], l: H.today(), p: 0 }); }
+      { const x = H.CAT_TK[i]; if (x) putTk(H.uid(), { n: x[0], w: 2, e: x[1], d: -2, min: x[2], l: H.today(), lw: -1, t: '', af: '', q: '', p: 0, chk: 0 }); }
       save(); render(); const n = $('sheetc').querySelector('.shb'); if (n) n.scrollTop = top; return;
     }
     if (a === 'wiki') { sheet = { t: 'wiki', d: {} }; render(); return; }
@@ -1265,7 +1296,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
     if (a === 'redit') { if (!S.rec[id] || S.rec[id].x) return; sheet = { t: 'rec', id, d: recDraft(id) }; render(); return; }
     if (a === 'rnew') { sheet = { t: 'rec', id: '', d: { n: '', s: S.store, c: 'sonst', k: '4', u: '7', l: H.today(), p: false } }; render(); return; }
     if (a === 'close') { if (leaveSheet()) render(); return; }
-    if (a === 'done') { if (saveSheet()) { sheet = null; save(); render(); } return; }
+    if (a === 'done') { if (saveSheet()) { sheet = null; save(); render(); nkTick(); } return; }
     if (a === 'fs' || a === 'rs') { readSheet(); sheet.d.s = st; render(); return; }
     if (a === 'idel') { killUndo(S.items, sheet.id, 'Gelöscht'); return; }
     if (a === 'mkrec') {
@@ -1332,6 +1363,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); min-height: 36px; 
       rd.onerror = () => toast('Datei konnte nicht gelesen werden');
       rd.readAsText(f); return;
     }
+    if (t && t.dataset && t.dataset.nke != null && sheet && sheet.t === 'nkpick') { const r = sheet.d.rows[t.dataset.nke]; if (r) r.e = Number(t.value); return; }
     if (t && t.id === 'nk_d') {
       if (H.DATE_RE.test(t.value) && t.value >= H.today()) { S.set = Object.assign({}, S.set, { nkN: t.value, m: Date.now() }); save(); t.blur(); nkTick(); render(); }
       else render();

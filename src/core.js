@@ -36,11 +36,12 @@
   const SHORT = new Set(['ei', 'öl', 'tk', 'eis']);
 
   /* Vorschlag für die Kategorie. Gelerntes (frühere Korrekturen) hat Vorrang. */
+  const KUECHE = ['backpapier', 'alufolie', 'frischhaltefolie', 'gefrierbeutel'];
   function guess(name, learn) {
     const n = String(name || '').trim().toLowerCase();
     if (!n) return { c: 'sonst', s: '' };
     const lr = own(learn, n); if (lr && !lr.x) return { c: lr.c, s: lr.s || '' };
-    if (n.includes('backpapier')) return { c: 'papier', s: 'dis' };
+    if (KUECHE.some(k => n.includes(k))) return { c: 'papier', s: 'dis' };
     const toks = n.split(/[^a-zäöüß-]+/).filter(Boolean);
     let best = null, bs = 0;
     toks.forEach(t => {
@@ -116,7 +117,7 @@
   /* ---- Startbestand: gängige Dauerartikel [Name, Laden, Kategorie, Tage] ---- */
   const SEED = [
     ['Toilettenpapier', 'dro', 'papier', 28], ['Küchenrollen', 'dro', 'papier', 28], ['Taschentücher', 'dro', 'papier', 42], ['Müllbeutel', 'dro', 'papier', 42],
-    ['Alufolie', 'dro', 'papier', 90], ['Backpapier', 'dis', 'papier', 90], ['Frischhaltefolie', 'dro', 'papier', 120], ['Gefrierbeutel', 'dro', 'papier', 120],
+    ['Alufolie', 'dis', 'papier', 90], ['Backpapier', 'dis', 'papier', 90], ['Frischhaltefolie', 'dis', 'papier', 120], ['Gefrierbeutel', 'dis', 'papier', 120],
     ['Spülmittel', 'dro', 'reinigung', 42], ['Spülmaschinentabs', 'dro', 'reinigung', 35], ['Geschirrspülsalz', 'dro', 'reinigung', 120], ['Waschmittel', 'dro', 'reinigung', 56],
     ['Weichspüler', 'dro', 'reinigung', 84], ['Allzweckreiniger', 'dro', 'reinigung', 90], ['WC-Reiniger', 'dro', 'reinigung', 60], ['Spülschwämme', 'dro', 'reinigung', 60],
     ['Spültücher', 'dro', 'reinigung', 90], ['Duschgel', 'dro', 'pflege', 42], ['Shampoo', 'dro', 'pflege', 56], ['Handseife', 'dro', 'pflege', 42],
@@ -424,12 +425,12 @@
       out.mu[k] = { n: str(x.n, 30) || k, a: x.a ? 1 : 0, d: ds, dn: DATE_RE.test(x.dn || '') ? x.dn : '', m: num(x.m) };
     });
     const st = d.set && typeof d.set === 'object' ? d.set : {};
-    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', m: num(st.m) };
+    out.set = { round: (st.round >= 0 && st.round <= 6 && Number.isInteger(st.round)) ? st.round : 4, names: [str(st.names && st.names[0], 20) || 'Roman', str(st.names && st.names[1], 20) || 'Ayşe'], route: cleanRoute(st.route), nkW: NK_W.includes(st.nkW) ? st.nkW : 4, nkN: DATE_RE.test(st.nkN || '') ? st.nkN : '', nkOk: st.nkOk ? 1 : 0, m: num(st.m) };
     return out;
   }
   /* Firebase lässt leere Objekte weg; beim Lesen auffüllen. */
   const unpack = raw => (raw && typeof raw === 'object') ? cleanDoc({ v: raw.v, items: raw.items || {}, rec: raw.rec || {}, lrn: raw.lrn || {}, fav: raw.fav || {}, trips: raw.trips || {}, tk: raw.tk || {}, mu: raw.mu || {}, set: raw.set }) : null;
 
-  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
+  root.HC = { CATS, STORES, CK, SK, CNAME, SNAME, defaultRoute, cleanRoute, guess, guessStore, today, addDays, diffDays, iso, DATE_RE, due, everyText, leftText, seed, toDate, TSEED, snapWd, nextDue, seedTasks, weekly, WD, WDL, monday, kw, fmtDay, fmtTime, fmtRange, uid, CATALOG, known, suggest, merge, same, cleanDoc, unpack, DAY, TOMB, TIPS, CAT_REC, CAT_TK, RUNDE_ORDER, ordIdx, WIKI, seedMuell, own, KUECHE, nkDue, nkQty, nkPick, nkNext, nkAdvance, nkId, nkFirst, NK_W, taskId: n => 't' + hash(n).toString(36), parseIcs, muImport, muNext };
   if (typeof module !== 'undefined') module.exports = root.HC;
 })(typeof window !== 'undefined' ? window : globalThis);

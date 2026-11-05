@@ -10,14 +10,14 @@ Sprache der App und der Kommunikation mit Roman: Deutsch, kurz und direkt.
 - `src/` = Quellcode. **Nur hier ändern.**
   - `core.js` Logik und Daten: Sync/Merge, Müllkalender (ICS-Import), Tipps (`TIPS`), Wiki (`WIKI`), Katalog, Reihenfolge der Runde
   - `app.js` Oberfläche, `style.css` Aussehen
-  - `build.js` baut alles zusammen, `test.js` enthält die Tests (129 Prüfungen)
+  - `build.js` baut alles zusammen, `test.js` enthält die Tests (130 Prüfungen)
   - `ics/` die Müllkalender-Dateien (2026, 2027), nur für die Tests
 - Hauptordner (`index.html`, `sw.js`, `manifest.webmanifest`, Icons) = **generiertes Ergebnis**, das GitHub Pages ausliefert. Nie von Hand bearbeiten.
 
 ## Arbeitsablauf
 1. `git pull` (vorher, immer – auch die Claude-App und andere Agenten pushen hier hin).
 2. Änderung in `src/` machen.
-3. In `src/` ausführen: `node build.js` und danach `node test.js`. Erwartet: `129 / 129 ok`.
+3. In `src/` ausführen: `node build.js` und danach `node test.js`. Erwartet: `130 / 130 ok`.
 4. In `src/build.js` die Zahl `CACHE_V` um 1 erhöhen und noch einmal `node build.js`. Sonst zeigt die installierte App den alten Stand. Die Anzeige unter „Mehr“ folgt automatisch.
 5. Committen. **Nicht pushen, bevor Roman es ausdrücklich freigibt.**
 
@@ -26,6 +26,6 @@ Sprache der App und der Kommunikation mit Roman: Deutsch, kurz und direkt.
 - Keine neuen Abhängigkeiten, kein Framework, alles bleibt eine Datei plus Service Worker.
 - `build.js` erzeugt die Content-Security-Policy mit Hashes der Skripte. Neue Netzwerkziele müssen dort in `connect-src` ergänzt werden, sonst blockt der Browser sie.
 - Sync-Dokument `{v:1, items, rec, lrn, fav, trips, tk, mu, set}`: pro Eintrag gilt „letzte Änderung gewinnt" (Feld `m`), gelöschte Einträge bleiben als Tombstone `{x:1, m}`. Bestehende Felder nie umbenennen, sonst gehen Daten verloren (ältere Geräte verwerfen unbekannte Felder).
-- Nachkauf-Tag: `set.nkW` (Abstand in Wochen: 2, 3, 4, 6) und `set.nkN` (nächster Termin). Am Termin kommt von selbst auf die Liste, was bis zur nächsten Runde nicht reicht. Die Item-id ist je Artikel und Termin fest (`H.nkId`), damit beide Geräte keine Doppelten erzeugen.
+- Nachkauf-Tag: `set.nkW` (Abstand in Wochen: 2, 3, 4, 6) , `set.nkN` (nächster Termin) und `set.nkOk` (Auswahl bestätigt, vorher läuft nichts). Am Termin kommt von selbst auf die Liste, was bis zur nächsten Runde nicht reicht. Die Item-id ist je Artikel und Termin fest (`H.nkId`), damit beide Geräte keine Doppelten erzeugen.
 - Müllkalender: `mu[id] = {n, a, d[], dn, m}`; der ICS-Import ersetzt Termine nur im Datumsbereich der Datei.
 - Offenes Vorhaben: Button „Meal-Prep-Einkauf holen" – holt die Wocheneinkaufsliste, die Vorkoch nach Firebase schreibt. Vorkoch liegt im Nachbarordner `projekte/vorkoch`.

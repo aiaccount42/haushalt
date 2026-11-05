@@ -73,7 +73,7 @@ eq(H.nkId('abcd', '2026-11-07'), H.nkId('abcd', '2026-11-07'), 'id stabil'); eq(
 eq(H.nkFirst('2026-11-05'), '2026-11-07', 'erster Tag Samstag'); eq(H.nkFirst('2026-11-07'), '2026-11-14', 'Samstag zählt nicht');
 eq(H.cleanDoc({ v: 1, set: { nkW: 6, nkN: '2026-11-07' } }).set.nkW, 6, 'Rhythmus bleibt'); eq(H.cleanDoc({ v: 1, set: { nkW: 5, nkN: 'x' } }).set.nkW + H.cleanDoc({ v: 1, set: { nkN: 'x' } }).set.nkN, '4', 'ungültig fällt zurück');
 eq(H.nkQty({ e: 21 }, 6), 2, 'Kaffee reicht bei 6 Wochen nicht mit einer'); eq(H.nkQty({ e: 56 }, 6), 1, 'eine reicht');
-eq(H.guess('Backpapier').s, 'dis', 'Backpapier nicht Drogerie'); eq(H.known({}).find(e => e.n === 'Backpapier').s, 'dis', 'Katalog auch nicht'); eq(H.seed(0)[Object.keys(H.seed(0)).find(k => H.seed(0)[k].n === 'Backpapier')].s, 'dis', 'Startbestand auch nicht');
+eq(['Backpapier', 'Alufolie', 'Frischhaltefolie', 'Gefrierbeutel'].map(n => H.guess(n).s).join(), 'dis,dis,dis,dis', 'Küchenartikel nicht Drogerie'); eq(H.cleanDoc({ v: 1, set: { nkOk: 1 } }).set.nkOk + H.cleanDoc({ v: 1, set: {} }).set.nkOk, 1, 'Start-Marke'); eq(H.known({}).find(e => e.n === 'Backpapier').s, 'dis', 'Katalog auch nicht'); eq(H.seed(0)[Object.keys(H.seed(0)).find(k => H.seed(0)[k].n === 'Backpapier')].s, 'dis', 'Startbestand auch nicht');
 // Härtung
 const P = H.cleanDoc(JSON.parse('{"v":1,"fav":{"__proto__":{"n":"x","m":1},"milch":{"n":"Milch","m":1}},"lrn":{"__proto__":{"c":"tk","m":1}}}'));
 eq(Object.keys(P.fav), ['milch'], 'proto in fav raus'); eq(Object.getPrototypeOf(P.fav) === Object.prototype && Object.getPrototypeOf(P.lrn) === Object.prototype, true, 'prototyp unverändert');
